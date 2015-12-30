@@ -1,7 +1,9 @@
 package prober
 
 import (
+	"fmt"
 	"net"
+	"probec/pkt"
 )
 
 type Pinger struct {
@@ -25,6 +27,16 @@ func (p *Pinger) Probe(laddr *net.IPAddr, raddr *net.IPAddr) (delays []int, err 
 		return delays, err
 	}
 	defer p.conn.Close()
+
+	echo := pkt.NewEchoRequest(pid, 1)
+
+	p.conn.Write(echo)
+
+	b := make([]byte, 1024)
+
+	size, _ := p.conn.Read(b)
+	fmt.Println(size)
+
 	return
 }
 
