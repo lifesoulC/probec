@@ -2,6 +2,7 @@ package netio
 
 import (
 	"encoding/binary"
+	"time"
 )
 
 var (
@@ -14,6 +15,7 @@ type icmpEchoType struct {
 	checksum uint16
 	id       uint16
 	seq      uint16
+	payload  []byte
 }
 
 func (echo *icmpEchoType) marshal() []byte {
@@ -22,20 +24,64 @@ func (echo *icmpEchoType) marshal() []byte {
 	p[1] = echo.code
 	binary.BigEndian.PutUint16(p[4:], echo.id)
 	binary.BigEndian.PutUint16(p[6:], echo.seq)
+	t := time.Now().UnixNano()
+	binary.LittleEndian.PutUint64(p[8:], uint64(t))
 	c := checkSum(p)
 	binary.BigEndian.PutUint16(p[2:], c)
 	return p
 }
 
-func buildIcmpEchoRequest(raddr string) []byte {
+func buildIcmpEchoRequest() []byte {
 	icmp := icmpEchoType{}
 	icmp.typ = 8
 	icmp.seq = seq + 1
-
+	icmp.id = uint16(pid)
 	seq += 1
 	if seq > 30000 {
 		seq = 0
 	}
-
 	return icmp.marshal()
+}
+
+type icmpHeadType struct {
+	typ      uint8
+	code     uint8
+	checksum uint16
+	data     []byte
+}
+
+type icmpEchoReply struct {
+	typ      uint8
+	code     uint8
+	checksum uint16
+	id       uint16
+	seq      uint16
+	data     []byte
+}
+
+func parseIcmpHeader(data []byte) (h *icmpHeadType) {
+	h = &icmpHeadType{}
+	if len(data) < 4 {
+		return
+	}
+	h.typ = data[0]
+	h.code = data[1]
+	h.checksum = binary.BigEndian.Uint16(data[2:])
+	return h
+}
+
+func parseIcmpEchoReply(data []byte) (reply *icmpEchoReply) {
+	reply = &icmpEchoReply{}
+	if len(data) < 8 {
+		return
+	}
+	reply.typ = data[0]
+	reply.code = data[1]
+	reply.checksum = binary.BigEndian.Uint16(data[2:])
+	reply.id = binary.BigEndian.Uint16(data[4:])
+	reply.seq = binary.BigEndian.Uint16(data[6:])
+	if len(data) > 8 {
+		reply.data = data[8:]
+	}
+	return reply
 }

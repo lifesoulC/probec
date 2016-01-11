@@ -2,14 +2,48 @@ package netio
 
 import (
 	"errors"
-	"fmt"
+	// "net"
 	"os"
+	"time"
 )
 
 const (
 	pktTypeICMPEcho = 1
 	pktTypeUDP      = 2
+	localUDPPort    = 33333
+	remoteUDPPort   = 35000
 )
+
+type PingResp struct {
+	Laddr string
+	Raddr string
+	Data  []byte
+	Stamp time.Time
+	Delay int64
+}
+
+type PingReq struct {
+	Laddr string
+	Raddr string
+	Stamp time.Time
+}
+
+type TTLResp struct {
+	Laddr string
+	Raddr string
+	Host  string
+	TTL   int
+	Data  []byte
+	Stamp time.Time
+}
+
+type TTLReq struct {
+	Laddr string
+	Raddr string
+	TTL   int
+	Data  []byte
+	Stamp time.Time
+}
 
 type WriteOpt struct {
 	Src  string
@@ -17,6 +51,21 @@ type WriteOpt struct {
 	TTL  int
 	Data []byte
 	typ  int
+}
+
+type ICMPOpts struct {
+	Src      string
+	Dest     string
+	Interval int
+	Count    int
+	ip       [4]byte
+}
+
+type NetIOHandler interface {
+	OnSendPing(*PingReq)
+	OnSendTTL(*TTLReq)
+	OnRecvPing(*PingResp)
+	OnRecvTTL(*TTLResp)
 }
 
 var (
@@ -32,41 +81,77 @@ func init() {
 
 }
 
+type icmpOpts struct {
+	sock  *icmpSocket
+	raddr string
+	dest  [4]byte
+	data  []byte
+}
+
+type ttlOpts struct {
+	sock *udpSocket
+	ttl  int
+	data []byte
+}
+
 type NetIO struct {
-	writeChan   chan *WriteOpt
-	writeSocket []*ipSocket
-	readSocket  *icmpSocket
+	udpSocks   []*udpSocket
+	icmpSocks  []*icmpSocket
+	recvSocket *icmpSocket
+	icmpChan   chan *icmpOpts
+	ttlChan    chan *ttlOpts
+	handler    NetIOHandler
 }
 
-func NewNetIO(srcAddrs []string) *NetIO {
+func NewNetIO(srcAddrs []string) (*NetIO, error) {
 	io := &NetIO{}
-	io.writeChan = make(chan *WriteOpt, 1024)
-
 	for _, addr := range srcAddrs {
-		s, e := newIpSocket(addr)
-		if e == nil {
-			io.writeSocket = append(io.writeSocket, s)
-		} else {
-			fmt.Println(e)
-		}
-	}
-	io.readSocket, _ = newIcmpSocket()
-	go io.readRoutine()
-	return io
-}
-
-func (io *NetIO) writeRoutine() {
-
-}
-
-func (io *NetIO) readRoutine() {
-	for {
-		p, r, e := io.readSocket.readFrom()
+		udp, e := newUDPSocket(addr)
 		if e != nil {
-			fmt.Println(e)
-			continue
-		}
-		fmt.Println(p, r)
+			return nil, e
 
+		} else {
+			io.udpSocks = append(io.udpSocks, udp)
+		}
+
+		icmp, e := newIcmpSocket(addr)
+		if e != nil {
+			return nil, e
+
+		} else {
+			io.icmpSocks = append(io.icmpSocks, icmp)
+		}
 	}
+
+	recv, e := newRecvSocket()
+	if e != nil {
+		return nil, e
+	}
+	io.recvSocket = recv
+
+	io.icmpChan = make(chan *icmpOpts, 1024)
+	io.ttlChan = make(chan *ttlOpts, 1024)
+
+	go io.sendRoutine()
+	go io.recvRoutine()
+
+	return io, nil
+}
+
+func (io *NetIO) getIcmpSock(addr string) *icmpSocket {
+	for _, s := range io.icmpSocks {
+		if s.laddr == addr {
+			return s
+		}
+	}
+	return nil
+}
+
+func (io *NetIO) getUdpSock(addr string) *udpSocket {
+	for _, s := range io.udpSocks {
+		if s.laddr == addr {
+			return s
+		}
+	}
+	return nil
 }

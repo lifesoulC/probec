@@ -2,6 +2,8 @@ package netio
 
 import (
 	"net"
+	"strconv"
+	"strings"
 )
 
 func ipSlice(ip [4]byte) []byte {
@@ -23,6 +25,22 @@ func addrIpArray(addr string) (ip [4]byte, err error) {
 	return ipArrary(a.IP.To4()), nil
 }
 
+func splitAddr(addr string) [4]byte {
+	ret := [4]byte{0, 0, 0, 0}
+	ips := strings.Split(addr, ".")
+	if len(ips) != 4 {
+		return ret
+	}
+	ip0, _ := strconv.Atoi(ips[0])
+	ip1, _ := strconv.Atoi(ips[1])
+	ip2, _ := strconv.Atoi(ips[2])
+	ip3, _ := strconv.Atoi(ips[3])
+	ret[0] = byte(ip0)
+	ret[1] = byte(ip1)
+	ret[2] = byte(ip2)
+	ret[3] = byte(ip3)
+	return ret
+}
 func checkSum(data []byte) uint16 {
 	var (
 		sum    uint32

@@ -1,48 +1,68 @@
 package netio
 
 import (
+	"errors"
 	"syscall"
 )
 
-type ipSocket struct {
+type udpSocket struct {
 	laddr string
 	fd    int
 }
 
 type icmpSocket struct {
+	laddr string
+	fd    int
+}
+
+type recvSock struct {
 	fd int
 }
 
-func newIpSocket(laddr string) (*ipSocket, error) {
+func newUDPSocket(laddr string) (*udpSocket, error) {
 	a, err := addrIpArray(laddr)
 	if err != nil {
 		return nil, err
 	}
-	s := &ipSocket{}
+	s := &udpSocket{}
+	s.laddr = laddr
+	s.fd, err = syscall.Socket(syscall.AF_INET, syscall.SOCK_RAW, syscall.IPPROTO_UDP)
+	if err != nil {
+		return nil, errors.New(laddr + " create udp socket:" + err.Error())
+	}
+
+	err = syscall.Bind(s.fd, &syscall.SockaddrInet4{Port: localUDPPort, Addr: a})
+	if err != nil {
+		return nil, errors.New(laddr + " bind udp socket:" + err.Error())
+	}
+	return s, nil
+}
+
+func newIcmpSocket(laddr string) (*icmpSocket, error) {
+	a, err := addrIpArray(laddr)
+	if err != nil {
+		return nil, err
+	}
+	s := &icmpSocket{}
 	s.laddr = laddr
 	s.fd, err = syscall.Socket(syscall.AF_INET, syscall.SOCK_RAW, syscall.IPPROTO_ICMP)
 	if err != nil {
-		return nil, err
+		return nil, errors.New(laddr + " create icmp socket:" + err.Error())
 	}
 
 	err = syscall.Bind(s.fd, &syscall.SockaddrInet4{Port: 0, Addr: a})
 	if err != nil {
-		return nil, err
+		return nil, errors.New(laddr + " bind icmp socket:" + err.Error())
 	}
 	return s, nil
 }
 
-func newIcmpSocket() (s *icmpSocket, err error) {
+func newRecvSocket() (s *icmpSocket, err error) {
 	s = &icmpSocket{}
 	s.fd, err = syscall.Socket(syscall.AF_INET, syscall.SOCK_RAW, syscall.IPPROTO_ICMP)
 	if err != nil {
-		return nil, err
+		return nil, errors.New("create icmp recieve socket:" + err.Error())
 	}
-	return s, nil
-}
 
-func (s *icmpSocket) readFrom() (p []byte, r syscall.Sockaddr, e error) {
-	p = make([]byte, 512)
-	_, r, e = syscall.Recvfrom(s.fd, p, 0)
-	return
+	return s, nil
 }
