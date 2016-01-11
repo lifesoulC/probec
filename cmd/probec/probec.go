@@ -2,14 +2,13 @@ package main
 
 import (
 	"fmt"
-	"probec/prober"
+	"probec/netio"
 )
 
 func main() {
 	fmt.Println("hello, probe c")
-	p := prober.NewPinger()
-	_, err := p.ProbeHost("0.0.0.0", "114.114.114.114")
-	if err != nil {
-		fmt.Println(err)
-	}
+	srcAddrs := []string{"192.168.2.6"}
+	netio.NewNetIO(srcAddrs)
+	c := make(chan int)
+	c <- 1
 }
