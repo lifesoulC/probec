@@ -31,11 +31,6 @@ func NewProber(src []string) (p *Prober, e error) {
 	return
 }
 
-// func (p *Prober) Ping(laddr string, raddr string) {
-// 	p.io.SendPing(laddr, raddr)
-
-// }
-
 func (p *Prober) ICMPPing(opts *PingOpts) {
 	radd, e := net.ResolveIPAddr("ip4", opts.Dest)
 	if e != nil {

@@ -6,8 +6,14 @@ import (
 )
 
 var (
-	seq uint16
+	seq          uint16
+	broadcastSeq uint16
 )
+
+func init() {
+	seq = icmpSeqMin
+	broadcastSeq = icmpBroadMin
+}
 
 type icmpEchoType struct {
 	typ      uint8
@@ -37,8 +43,20 @@ func buildIcmpEchoRequest() []byte {
 	icmp.seq = seq + 1
 	icmp.id = uint16(pid)
 	seq += 1
-	if seq > 30000 {
-		seq = 0
+	if seq > icmpSeqMax {
+		seq = icmpSeqMin
+	}
+	return icmp.marshal()
+}
+
+func buildIcmpBroadcast() []byte {
+	icmp := icmpEchoType{}
+	icmp.typ = 8
+	icmp.seq = broadcastSeq + 1
+	icmp.id = uint16(pid)
+	broadcastSeq += 1
+	if broadcastSeq > icmpBroadMax {
+		broadcastSeq = icmpBroadMin
 	}
 	return icmp.marshal()
 }

@@ -63,6 +63,5 @@ func newRecvSocket() (s *icmpSocket, err error) {
 	if err != nil {
 		return nil, errors.New("create icmp recieve socket:" + err.Error())
 	}
-
 	return s, nil
 }

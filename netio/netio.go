@@ -12,6 +12,10 @@ const (
 	pktTypeUDP      = 2
 	localUDPPort    = 33333
 	remoteUDPPort   = 35000
+	icmpSeqMin      = 1
+	icmpSeqMax      = 99
+	icmpBroadMin    = 100
+	icmpBroadMax    = 199
 )
 
 type PingResp struct {
@@ -22,24 +26,10 @@ type PingResp struct {
 	Delay int64
 }
 
-type PingReq struct {
-	Laddr string
-	Raddr string
-	Stamp time.Time
-}
-
 type TTLResp struct {
 	Laddr string
 	Raddr string
 	Host  string
-	TTL   int
-	Data  []byte
-	Stamp time.Time
-}
-
-type TTLReq struct {
-	Laddr string
-	Raddr string
 	TTL   int
 	Data  []byte
 	Stamp time.Time
@@ -62,10 +52,9 @@ type ICMPOpts struct {
 }
 
 type NetIOHandler interface {
-	OnSendPing(*PingReq)
-	OnSendTTL(*TTLReq)
 	OnRecvPing(*PingResp)
 	OnRecvTTL(*TTLResp)
+	OnRecvICMPBroadcast(*PingResp)
 }
 
 var (
@@ -83,6 +72,7 @@ func init() {
 
 type icmpOpts struct {
 	sock  *icmpSocket
+	broad bool
 	raddr string
 	dest  [4]byte
 	data  []byte

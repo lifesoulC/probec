@@ -54,6 +54,13 @@ func (io *NetIO) onIcmpReply(data []byte) {
 	fmt.Println(resp.Laddr, "->", resp.Raddr, ":", resp.Delay)
 
 	if io.handler != nil {
-		io.handler.OnRecvPing(resp)
+		if reply.seq < icmpSeqMax {
+			io.handler.OnRecvPing(resp)
+			return
+		}
+		if reply.seq < icmpBroadMax {
+			io.handler.OnRecvICMPBroadcast(resp)
+			return
+		}
 	}
 }
