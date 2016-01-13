@@ -89,8 +89,6 @@ func (p *IcmpEcho) Len() int {
 	return 4 + len(p.Data)
 }
 
-// Marshal returns the binary enconding of the ICMP echo request or
-// reply message body p.
 func (p *IcmpEcho) Marshal() ([]byte, error) {
 	b := make([]byte, 4+len(p.Data))
 	b[0], b[1] = byte(p.ID>>8), byte(p.ID&0xff)
@@ -99,7 +97,6 @@ func (p *IcmpEcho) Marshal() ([]byte, error) {
 	return b, nil
 }
 
-// parseICMPEcho parses b as an ICMP echo request or reply message body.
 func parseICMPEcho(b []byte) (*IcmpEcho, error) {
 	bodylen := len(b)
 	p := &IcmpEcho{ID: int(b[0])<<8 | int(b[1]), Seq: int(b[2])<<8 | int(b[3])}

@@ -7,8 +7,9 @@ import (
 )
 
 type Prober struct {
-	src []string
-	io  *netio.NetIO
+	src        []string
+	io         *netio.NetIO
+	icmpResuts *icmpResultsType
 }
 
 type PingOpts struct {
@@ -28,6 +29,7 @@ func NewProber(src []string) (p *Prober, e error) {
 	if e != nil {
 		return
 	}
+	p.icmpResuts = newIcmpResults()
 	return
 }
 

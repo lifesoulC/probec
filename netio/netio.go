@@ -19,11 +19,13 @@ const (
 )
 
 type PingResp struct {
-	Laddr string
-	Raddr string
-	Data  []byte
-	Stamp time.Time
-	Delay int64
+	Laddr    string
+	Raddr    string
+	LaddrInt uint32
+	RaddrInt uint32
+	Data     []byte
+	Stamp    time.Time
+	Delay    int64
 }
 
 type TTLResp struct {

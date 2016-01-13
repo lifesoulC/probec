@@ -42,6 +42,8 @@ func (io *NetIO) onIcmpReply(data []byte) {
 	resp.Stamp = t
 	resp.Laddr = srcIP
 	resp.Raddr = destIP
+	resp.LaddrInt = binary.BigEndian.Uint32(data[16:])
+	resp.RaddrInt = binary.BigEndian.Uint32(data[12:])
 	t1 := int64(binary.LittleEndian.Uint64(data[28:]))
 	if t1 < 0 {
 		return
