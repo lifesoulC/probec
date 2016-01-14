@@ -24,7 +24,6 @@ func newIcmpResults() *icmpResultsType {
 func (results *icmpResultsType) beginWait(src *addr.IPAddr, dest *addr.IPAddr) {
 	id := addr.AddrPair(src, dest)
 	r := make([]int, 0, 64)
-	fmt.Println("wait id", id)
 	results.lock.Lock()
 
 	for {
