@@ -43,7 +43,6 @@ func (results *icmpResultsType) beginWait(src *addr.IPAddr, dest *addr.IPAddr) {
 func (results *icmpResultsType) endWait(src *addr.IPAddr, dest *addr.IPAddr, t int) []int {
 	time.Sleep(time.Duration(t) * time.Millisecond)
 	id := addr.AddrPair(src, dest)
-	fmt.Println("endwait id", id)
 	results.lock.Lock()
 	r := results.results[id]
 	delete(results.results, id)
@@ -54,7 +53,6 @@ func (results *icmpResultsType) endWait(src *addr.IPAddr, dest *addr.IPAddr, t i
 
 func (results *icmpResultsType) waitResult(src *addr.IPAddr, dest *addr.IPAddr, t int) []int {
 	id := addr.AddrPair(src, dest)
-	fmt.Println("wait id", id)
 	results.cond.L.Lock()
 	for {
 		_, ok := results.results[id]
@@ -82,7 +80,6 @@ func (results *icmpResultsType) waitResult(src *addr.IPAddr, dest *addr.IPAddr, 
 
 func (results *icmpResultsType) addResult(src *addr.IPAddr, dest *addr.IPAddr, delay int) {
 	id := addr.AddrPair(src, dest)
-	fmt.Println("add id", id)
 	results.lock.Lock()
 	defer results.lock.Unlock()
 	r := results.results[id]
