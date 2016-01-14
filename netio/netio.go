@@ -4,6 +4,7 @@ import (
 	"errors"
 	// "net"
 	"os"
+	"probec/internal/addr"
 	"time"
 )
 
@@ -19,13 +20,9 @@ const (
 )
 
 type PingResp struct {
-	Laddr    string
-	Raddr    string
-	LaddrInt uint32
-	RaddrInt uint32
-	Data     []byte
-	Stamp    time.Time
-	Delay    int64
+	Src   *addr.IPAddr
+	Dest  *addr.IPAddr
+	Delay int
 }
 
 type TTLResp struct {
@@ -37,17 +34,9 @@ type TTLResp struct {
 	Stamp time.Time
 }
 
-type WriteOpt struct {
-	Src  string
-	Dest string
-	TTL  int
-	Data []byte
-	typ  int
-}
-
 type ICMPOpts struct {
-	Src      string
-	Dest     string
+	Src      *addr.IPAddr
+	Dest     *addr.IPAddr
 	Interval int
 	Count    int
 	ip       [4]byte
@@ -75,9 +64,9 @@ func init() {
 type icmpOpts struct {
 	sock  *icmpSocket
 	broad bool
-	raddr string
-	dest  [4]byte
-	data  []byte
+	// src   *addr.IPAddr
+	dest [4]byte
+	data []byte
 }
 
 type ttlOpts struct {
@@ -130,6 +119,9 @@ func NewNetIO(srcAddrs []string) (*NetIO, error) {
 	return io, nil
 }
 
+func (io *NetIO) SetHandler(h NetIOHandler) {
+	io.handler = h
+}
 func (io *NetIO) getIcmpSock(addr string) *icmpSocket {
 	for _, s := range io.icmpSocks {
 		if s.laddr == addr {

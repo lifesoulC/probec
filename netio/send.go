@@ -2,35 +2,37 @@ package netio
 
 import (
 	"fmt"
+	"probec/internal/addr"
 	"syscall"
 	"time"
 )
 
-func (io *NetIO) SendPing(laddr string, raddr [4]byte) {
-	socket := io.getIcmpSock(laddr)
+func (io *NetIO) SendPing(src *addr.IPAddr, dest *addr.IPAddr) {
+	socket := io.getIcmpSock(src.String)
 	if socket == nil {
-		fmt.Println(laddr, "not a local ip")
+		fmt.Println(src.String, "not a local ip")
 		return
 	}
 	opt := &icmpOpts{}
-	opt.dest = raddr
+	opt.dest = dest.Array
 	opt.sock = socket
 	opt.broad = false
 	io.icmpChan <- opt
 }
 
-func (io *NetIO) SendPingBroadcast(laddr string, raddr [4]byte) {
-	socket := io.getIcmpSock(laddr)
+func (io *NetIO) SendPingBroadcast(src *addr.IPAddr, dest *addr.IPAddr) {
+	socket := io.getIcmpSock(src.String)
 	if socket == nil {
-		fmt.Println(laddr, "not a local ip")
+		fmt.Println(src.String, "not a local ip")
 		return
 	}
 
 	for i := 1; i < 255; i++ {
+		raddr := dest.Array
 		raddr[3] = byte(i)
 		opt := &icmpOpts{}
 		opt.sock = socket
-		opt.dest = raddr
+		opt.dest = dest.Array
 		opt.broad = true
 		io.icmpChan <- opt
 	}
@@ -57,12 +59,7 @@ func (io *NetIO) sendIcmp(opts *icmpOpts) {
 		fmt.Println("send to", opts.dest, e.Error())
 		return
 	}
-	// if io.handler != nil {
-	// 	req := &PingReq{}
-	// 	req.Laddr = opts.sock.laddr
-	// 	req.Raddr = opts.raddr
-	// 	io.handler.OnSendPing(req)
-	// }
+
 	time.Sleep(10 * time.Microsecond)
 }
 

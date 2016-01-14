@@ -20,12 +20,13 @@ func main() {
 		return
 	}
 	pingOpts := &prober.PingOpts{}
-	pingOpts.Src = "192.168.199.138"
-	pingOpts.Dest = "sina.com.cn"
-	pingOpts.Count = 100
+	pingOpts.Src = "10.0.0.166"
+	pingOpts.Dest = "baidu.com"
+	pingOpts.Count = 5
 	pingOpts.Interval = 200
 	probe.ICMPPing(pingOpts)
 
+	probe.ICMPPing(pingOpts)
 	c := make(chan int)
 	c <- 1
 }

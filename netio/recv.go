@@ -3,6 +3,7 @@ package netio
 import (
 	"encoding/binary"
 	"fmt"
+	"probec/internal/addr"
 	"syscall"
 	"time"
 )
@@ -31,19 +32,15 @@ func (io *NetIO) recvRoutine() {
 
 func (io *NetIO) onIcmpReply(data []byte) {
 	t := time.Now()
-	destIP := fmt.Sprintf("%d.%d.%d.%d", data[12], data[13], data[14], data[15])
-	srcIP := fmt.Sprintf("%d.%d.%d.%d", data[16], data[17], data[18], data[19])
+	dest := addr.FromSlice(data[12:])
+	src := addr.FromSlice(data[16:])
 	reply := parseIcmpEchoReply(data[20:])
 	if reply.id != uint16(pid) {
 		return
 	}
 	resp := &PingResp{}
-	resp.Data = reply.data
-	resp.Stamp = t
-	resp.Laddr = srcIP
-	resp.Raddr = destIP
-	resp.LaddrInt = binary.BigEndian.Uint32(data[16:])
-	resp.RaddrInt = binary.BigEndian.Uint32(data[12:])
+	resp.Src = src
+	resp.Dest = dest
 	t1 := int64(binary.LittleEndian.Uint64(data[28:]))
 	if t1 < 0 {
 		return
@@ -52,8 +49,7 @@ func (io *NetIO) onIcmpReply(data []byte) {
 	if delay < 0 || delay > 100000000 {
 		return
 	}
-	resp.Delay = delay
-	fmt.Println(resp.Laddr, "->", resp.Raddr, ":", resp.Delay)
+	resp.Delay = int(delay)
 
 	if io.handler != nil {
 		if reply.seq < icmpSeqMax {
