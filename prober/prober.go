@@ -8,9 +8,10 @@ import (
 )
 
 type Prober struct {
-	src         []string
-	io          *netio.NetIO
-	icmpResults *icmpResultsType
+	src              []string
+	io               *netio.NetIO
+	icmpResults      *icmpResultsType
+	icmpBroadResults *icmpBroadResultsType
 }
 
 type PingOpts struct {
@@ -31,6 +32,7 @@ func NewProber(src []string) (p *Prober, e error) {
 		return
 	}
 	p.icmpResults = newIcmpResults()
+	p.icmpBroadResults = newIcmpBroadResults()
 	p.io.SetHandler(p)
 	return
 }
@@ -56,8 +58,4 @@ func (p *Prober) ICMPPing(opts *PingOpts) (delays []int, e error) {
 	delays = p.icmpResults.endWait(opts.src, opts.dest, 2)
 	fmt.Println("delays:", delays)
 	return
-}
-
-func ipArray(ip []byte) [4]byte {
-	return [4]byte{ip[0], ip[1], ip[2], ip[3]}
 }

@@ -11,9 +11,11 @@ func (prober *Prober) OnRecvPing(pkt *netio.PingResp) {
 }
 
 func (prober *Prober) OnRecvTTL(pkt *netio.TTLResp) {
+	// fmt.Println(pkt.Src.String, "->", pkt.Dest.String, pkt.Delay)
 
 }
 
 func (prober *Prober) OnRecvICMPBroadcast(pkt *netio.PingResp) {
-
+	fmt.Println(pkt.Src.String, "->", pkt.Dest.String, pkt.Delay)
+	prober.icmpBroadResults.addResult(pkt.Src, pkt.Dest, pkt.Delay)
 }
