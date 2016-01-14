@@ -1,6 +1,7 @@
 package prober
 
 import (
+	"probec/internal/addr"
 	"sync"
 	"time"
 )
@@ -16,7 +17,8 @@ func newIcmpResults() *icmpResultsType {
 	return r
 }
 
-func (results *icmpResultsType) watiResult(id uint64, t int) []int {
+func (results *icmpResultsType) waitResult(src string, dest string, t int) []int {
+	id := buildIdFromAddr(src, dest)
 	results.cond.L.Lock()
 	for {
 		_, ok := results.results[id]
@@ -36,11 +38,12 @@ func (results *icmpResultsType) watiResult(id uint64, t int) []int {
 
 	results.cond.L.Lock()
 	r = results.results[id]
+	delete(results.results, id)
 	results.cond.L.Unlock()
 	results.cond.Signal()
 	return r
 }
 
 func buildIdFromAddr(src string, dest string) uint64 {
-
+	return addr.AddPair(src, dest)
 }

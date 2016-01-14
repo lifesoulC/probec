@@ -20,7 +20,7 @@ func main() {
 		return
 	}
 	pingOpts := &prober.PingOpts{}
-	pingOpts.Src = "10.0.0.166"
+	pingOpts.Src = "192.168.199.138"
 	pingOpts.Dest = "sina.com.cn"
 	pingOpts.Count = 100
 	pingOpts.Interval = 200
