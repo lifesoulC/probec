@@ -1,7 +1,6 @@
 package prober
 
 import (
-	"fmt"
 	"probec/internal/addr"
 	"sync"
 	"time"
