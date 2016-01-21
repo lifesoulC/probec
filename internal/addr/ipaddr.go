@@ -56,3 +56,11 @@ func AddrSectionPair(addr1 *IPAddr, addr2 *IPAddr) uint64 {
 func (addr *IPAddr) Equal(rhs *IPAddr) bool {
 	return addr.addr == rhs.addr
 }
+
+func (addr *IPAddr) Less(rhs *IPAddr) bool {
+	return addr.addr < rhs.addr
+}
+
+func (addr *IPAddr) Great(rhs *IPAddr) bool {
+	return addr.addr > rhs.addr
+}

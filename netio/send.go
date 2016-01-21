@@ -32,8 +32,9 @@ func (io *NetIO) SendPingBroadcast(src *addr.IPAddr, dest *addr.IPAddr) {
 		raddr[3] = byte(i)
 		opt := &icmpOpts{}
 		opt.sock = socket
-		opt.dest = dest.Array
+		opt.dest = raddr
 		opt.broad = true
+		time.Sleep(5 * time.Millisecond)
 		io.icmpChan <- opt
 	}
 
@@ -59,8 +60,6 @@ func (io *NetIO) sendIcmp(opts *icmpOpts) {
 		fmt.Println("send to", opts.dest, e.Error())
 		return
 	}
-
-	time.Sleep(10 * time.Microsecond)
 }
 
 func (io *NetIO) sendRoutine() {

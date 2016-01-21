@@ -2,7 +2,9 @@ package main
 
 import (
 	"fmt"
+	"os"
 	"probec/prober"
+	"strconv"
 )
 
 var prob *prober.Prober
@@ -23,8 +25,20 @@ func main() {
 		fmt.Println(e)
 		return
 	}
+	if len(os.Args) < 2 {
+		fmt.Println("usage: probec [port]")
+		return
+	}
 
-	e = StartHTTP(":8088")
+	port, e := strconv.Atoi(os.Args[1])
+	if e != nil {
+		fmt.Println("invalid port number")
+		return
+	}
+
+	listenPort := fmt.Sprintf(":%d", port)
+	fmt.Println("listen port", port)
+	e = StartHTTP(listenPort)
 	if e != nil {
 		fmt.Println(e)
 	}

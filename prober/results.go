@@ -16,8 +16,16 @@ type icmpBroadResultType struct {
 	dest   *addr.IPAddr
 	delays []int
 }
+
+type DestDelays struct {
+	Dest   *addr.IPAddr
+	Delays []int
+}
+
+type broadcastMap map[uint64][]*icmpBroadResultType
+
 type icmpBroadResultsType struct {
-	results map[uint64][]*icmpBroadResultType
+	results broadcastMap
 	lock    sync.Mutex
 	cond    *sync.Cond
 }
@@ -77,7 +85,7 @@ func newIcmpBroadResults() *icmpBroadResultsType {
 
 func (results *icmpBroadResultsType) beginWait(src *addr.IPAddr, dest *addr.IPAddr) {
 	id := addr.AddrSectionPair(src, dest)
-	r := make([]*icmpBroadResultType, 255)
+	r := make([]*icmpBroadResultType, 0)
 	results.lock.Lock()
 	for {
 		_, ok := results.results[id]
@@ -93,7 +101,7 @@ func (results *icmpBroadResultsType) beginWait(src *addr.IPAddr, dest *addr.IPAd
 }
 
 func (results *icmpBroadResultsType) endWait(src *addr.IPAddr, dest *addr.IPAddr, t int) []*icmpBroadResultType {
-	time.Sleep(time.Duration(t) * time.Millisecond)
+	time.Sleep(time.Duration(t) * time.Second)
 	id := addr.AddrSectionPair(src, dest)
 	results.lock.Lock()
 	r := results.results[id]
@@ -108,10 +116,21 @@ func (results *icmpBroadResultsType) addResult(src *addr.IPAddr, dest *addr.IPAd
 	results.lock.Lock()
 	defer results.lock.Unlock()
 	r := results.results[id]
+	newResult := true
 	for _, v := range r {
-		if v.dest.Equal(dest) {
+		// fmt.Println(v)
+		if v != nil && v.dest.Equal(dest) {
 			v.delays = append(v.delays, delay)
+			newResult = false
 		}
 	}
+
+	if newResult {
+		n := &icmpBroadResultType{}
+		n.dest = dest
+		n.delays = append(n.delays, delay)
+		r = append(r, n)
+	}
+
 	results.results[id] = r
 }
