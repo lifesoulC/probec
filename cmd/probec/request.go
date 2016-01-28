@@ -20,6 +20,15 @@ func icmpPing(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	err = checkSrcIP(resp.Src)
+	if err != nil {
+		resp.ErrMsg = err.Error()
+		resp.ErrCode = errSrcIP
+		b, _ := json.Marshal(resp)
+		w.Write(b)
+		return
+	}
+
 	opts := &prober.PingOpts{}
 	opts.Count = req.Count
 	opts.Src = req.Src
@@ -56,6 +65,15 @@ func icmpBroadcast(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	err = checkSrcIP(resp.Src)
+	if err != nil {
+		resp.ErrMsg = err.Error()
+		resp.ErrCode = errSrcIP
+		b, _ := json.Marshal(resp)
+		w.Write(b)
+		return
+	}
+
 	opts := &prober.IcmpBroadcastOpts{}
 	opts.Src = req.Src
 	opts.Dest = req.Dest
@@ -67,6 +85,9 @@ func icmpBroadcast(w http.ResponseWriter, r *http.Request) {
 		resp.ErrCode = errUnkown
 	} else {
 		for _, v := range delays {
+			if v.Dest == nil {
+				continue
+			}
 			d := &hostDelays{}
 			d.Host = v.Dest.String
 			d.Delays = append(d.Delays, v.Delays...)

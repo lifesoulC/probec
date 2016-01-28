@@ -16,6 +16,7 @@ func main() {
 		fmt.Println(e)
 		return
 	}
+	srcIP = src
 	for _, s := range src {
 		fmt.Println(s)
 	}

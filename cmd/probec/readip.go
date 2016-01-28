@@ -5,6 +5,8 @@ import (
 	"os"
 )
 
+var srcIP []string
+
 func readIPFile() (src []string, err error) {
 	f, e := os.Open("ip.txt")
 	if e != nil {
