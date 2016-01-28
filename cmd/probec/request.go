@@ -20,7 +20,7 @@ func icmpPing(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err = checkSrcIP(resp.Src)
+	err = checkSrcIP(req.Src)
 	if err != nil {
 		resp.ErrMsg = err.Error()
 		resp.ErrCode = errSrcIP
@@ -34,8 +34,6 @@ func icmpPing(w http.ResponseWriter, r *http.Request) {
 	opts.Src = req.Src
 	opts.Dest = req.Dest
 	opts.Interval = req.Interval
-	prob.ICMPPing(opts)
-
 	delays, err := prob.ICMPPing(opts)
 
 	if err != nil {
@@ -65,7 +63,7 @@ func icmpBroadcast(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err = checkSrcIP(resp.Src)
+	err = checkSrcIP(req.Src)
 	if err != nil {
 		resp.ErrMsg = err.Error()
 		resp.ErrCode = errSrcIP
