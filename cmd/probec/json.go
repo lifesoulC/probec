@@ -23,6 +23,12 @@ type hostDelays struct {
 	Delays []int  `json:"Delays"`
 }
 
+type hostTraceDelays struct {
+	Host   string `json:"Host"`
+	TTL    int    `json:"TTL"`
+	Delays []int  `json:"Delays"`
+}
+
 type icmpBroadcastResp struct {
 	ErrCode int           `json:"ErrCode"`
 	ErrMsg  string        `json:"ErrMsg"`
@@ -30,4 +36,13 @@ type icmpBroadcastResp struct {
 	Src     string        `json:"Src"`
 	Dest    string        `json:"Dest"`
 	Delays  []*hostDelays `json:"Delays"`
+}
+
+type traceResp struct {
+	ErrCode int                `json:"ErrCode"`
+	ErrMsg  string             `json:"ErrMsg"`
+	Token   string             `json:"Token"`
+	Src     string             `json:"Src"`
+	Dest    string             `json:"Dest"`
+	Delays  []*hostTraceDelays `json:"Delays"`
 }

@@ -26,7 +26,7 @@ func newUDPSocket(laddr string) (*udpSocket, error) {
 	}
 	s := &udpSocket{}
 	s.laddr = laddr
-	s.fd, err = syscall.Socket(syscall.AF_INET, syscall.SOCK_RAW, syscall.IPPROTO_UDP)
+	s.fd, err = syscall.Socket(syscall.AF_INET, syscall.SOCK_DGRAM, syscall.IPPROTO_UDP)
 	if err != nil {
 		return nil, errors.New(laddr + " create udp socket:" + err.Error())
 	}
@@ -34,6 +34,11 @@ func newUDPSocket(laddr string) (*udpSocket, error) {
 	err = syscall.Bind(s.fd, &syscall.SockaddrInet4{Port: localUDPPort, Addr: a})
 	if err != nil {
 		return nil, errors.New(laddr + " bind udp socket:" + err.Error())
+	}
+
+	err = syscall.SetsockoptInt(s.fd, syscall.SOL_SOCKET, syscall.SO_SNDBUF, 1024*1024)
+	if err != nil {
+		return nil, errors.New(laddr + " set udp socket send buff:" + err.Error())
 	}
 	return s, nil
 }

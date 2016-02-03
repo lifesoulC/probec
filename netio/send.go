@@ -34,17 +34,26 @@ func (io *NetIO) SendPingBroadcast(src *addr.IPAddr, dest *addr.IPAddr) {
 		opt.sock = socket
 		opt.dest = raddr
 		opt.broad = true
-		time.Sleep(5 * time.Millisecond)
 		io.icmpChan <- opt
+		time.Sleep(5 * time.Millisecond)
 	}
 
 }
 
-func (io *NetIO) SendTTL(laddr string, raddr string, data []byte, ttl int) {
-	socket := io.getUdpSock(laddr)
+func (io *NetIO) SendTTL(src *addr.IPAddr, dest *addr.IPAddr, ttl int) {
+	socket := io.getUdpSock(src.String)
 	if socket == nil {
-		fmt.Println(laddr, "not a local ip")
+		fmt.Println(src.String, "not a local ip")
 		return
+	}
+
+	for i := 1; i <= ttl; i++ {
+		opts := &ttlOpts{}
+		opts.sock = socket
+		opts.dest = dest.Array
+		opts.ttl = i
+		io.ttlChan <- opts
+		time.Sleep(5 * time.Millisecond)
 	}
 }
 
@@ -62,11 +71,29 @@ func (io *NetIO) sendIcmp(opts *icmpOpts) {
 	}
 }
 
+func (io *NetIO) sendTTLUDP(opts *ttlOpts) {
+	e := syscall.SetsockoptInt(opts.sock.fd, 0, syscall.IP_TTL, opts.ttl)
+	if e != nil {
+		fmt.Println(e)
+		return
+	}
+
+	b := buildUDP(opts.ttl)
+
+	e = syscall.Sendto(opts.sock.fd, b, 0, &syscall.SockaddrInet4{Port: remoteUDPPort, Addr: opts.dest})
+	if e != nil {
+		fmt.Println(e)
+		return
+	}
+}
+
 func (io *NetIO) sendRoutine() {
 	for {
 		select {
 		case icmpOpts := <-io.icmpChan:
 			io.sendIcmp(icmpOpts)
+		case ttlOpts := <-io.ttlChan:
+			io.sendTTLUDP(ttlOpts)
 		}
 	}
 }

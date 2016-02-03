@@ -2,17 +2,15 @@ package netio
 
 import (
 	"errors"
-	// "net"
 	"os"
 	"probec/internal/addr"
-	"time"
 )
 
 const (
 	pktTypeICMPEcho = 1
 	pktTypeUDP      = 2
 	localUDPPort    = 33333
-	remoteUDPPort   = 35000
+	remoteUDPPort   = 33486
 	icmpSeqMin      = 1
 	icmpSeqMax      = 99
 	icmpBroadMin    = 100
@@ -26,12 +24,11 @@ type PingResp struct {
 }
 
 type TTLResp struct {
-	Laddr string
-	Raddr string
-	Host  string
+	Src   *addr.IPAddr
+	Dest  *addr.IPAddr
+	Host  *addr.IPAddr
 	TTL   int
-	Data  []byte
-	Stamp time.Time
+	Delay int
 }
 
 type ICMPOpts struct {
@@ -64,13 +61,13 @@ func init() {
 type icmpOpts struct {
 	sock  *icmpSocket
 	broad bool
-	// src   *addr.IPAddr
-	dest [4]byte
-	data []byte
+	dest  [4]byte
+	data  []byte
 }
 
 type ttlOpts struct {
 	sock *udpSocket
+	dest [4]byte
 	ttl  int
 	data []byte
 }

@@ -12,6 +12,7 @@ type Prober struct {
 	io               *netio.NetIO
 	icmpResults      *icmpResultsType
 	icmpBroadResults *icmpBroadResultsType
+	traceResults     *traceResultsType
 }
 
 func NewProber(src []string) (p *Prober, e error) {
@@ -23,6 +24,7 @@ func NewProber(src []string) (p *Prober, e error) {
 	}
 	p.icmpResults = newIcmpResults()
 	p.icmpBroadResults = newIcmpBroadResults()
+	p.traceResults = newTraceResults()
 	p.io.SetHandler(p)
 	return
 }
@@ -68,6 +70,27 @@ func (p *Prober) BroadCastPing(opts *IcmpBroadcastOpts) (ret []*DestDelays, e er
 	delays := p.icmpBroadResults.endWait(opts.src, opts.dest, 1)
 	ret = searchBroadcastDelays(opts.dest, delays)
 	return
+}
+
+func (p *Prober) Trace(opts *TraceOpts) (delays []*TraceResultType, e error) {
+	opts.src, e = addr.FromString(opts.Src)
+	if e != nil {
+		return
+	}
+	opts.dest, e = addr.FromString(opts.Dest)
+	if e != nil {
+		return
+	}
+	fmt.Printf("trace %s from %s \n", opts.dest.String, opts.src.String)
+
+	p.traceResults.beginWait(opts.src, opts.dest)
+	for i := 0; i < opts.Count; i++ {
+		p.io.SendTTL(opts.src, opts.dest, 64)
+		time.Sleep(time.Duration(opts.Interval) * time.Millisecond)
+	}
+	delays = p.traceResults.endWait(opts.src, opts.dest, 1)
+	return
+
 }
 
 func searchBroadcastDelays(src *addr.IPAddr, delays []*icmpBroadResultType) []*DestDelays {

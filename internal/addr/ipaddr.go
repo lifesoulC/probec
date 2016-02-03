@@ -30,6 +30,17 @@ func FromString(addr string) (ipAddr *IPAddr, e error) {
 	return
 }
 
+func FromInt(ip uint32) (ipAddr *IPAddr) {
+	ipAddr = &IPAddr{}
+	ipAddr.addr = ip
+	ipAddr.Slice = make([]byte, 4)
+	binary.BigEndian.PutUint32(ipAddr.Slice, ip)
+	ipAddr.Array[0], ipAddr.Array[1], ipAddr.Array[2], ipAddr.Array[3] = ipAddr.Slice[0], ipAddr.Slice[1], ipAddr.Slice[2], ipAddr.Slice[3]
+	ipAddr.String = fmt.Sprintf("%d.%d.%d.%d", ipAddr.Array[0], ipAddr.Array[1], ipAddr.Array[2], ipAddr.Array[3])
+	ipAddr.Domain = ipAddr.String
+	return ipAddr
+}
+
 func FromSlice(addr []byte) (ipAddr *IPAddr) {
 	ipAddr = &IPAddr{}
 	ipAddr.Slice = make([]byte, 4)

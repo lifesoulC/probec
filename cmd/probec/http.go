@@ -7,5 +7,6 @@ import (
 func StartHTTP(addr string) error {
 	http.HandleFunc("/probe/ping", icmpPing)
 	http.HandleFunc("/probe/broadcast", icmpBroadcast)
+	http.HandleFunc("/probe/trace", udpTrace)
 	return http.ListenAndServe(addr, nil)
 }

@@ -103,3 +103,12 @@ func parseIcmpEchoReply(data []byte) (reply *icmpEchoReply) {
 	}
 	return reply
 }
+
+func buildUDP(ttl int) []byte {
+	b := make([]byte, 64)
+	t := time.Now().UnixNano()
+	binary.LittleEndian.PutUint32(b, uint32(pid))
+	binary.LittleEndian.PutUint32(b[4:], uint32(ttl))
+	binary.LittleEndian.PutUint64(b[8:], uint64(t))
+	return b
+}

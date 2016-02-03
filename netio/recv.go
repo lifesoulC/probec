@@ -10,7 +10,7 @@ import (
 
 func (io *NetIO) recvRoutine() {
 	for {
-		p := make([]byte, 128)
+		p := make([]byte, 256)
 		size, _, e := syscall.Recvfrom(io.recvSocket.fd, p, 0)
 		if size < 36 {
 			continue
@@ -25,6 +25,11 @@ func (io *NetIO) recvRoutine() {
 		icmp := parseIcmpHeader(p[20:])
 		if icmp.typ == 0 {
 			io.onIcmpReply(p)
+			continue
+		}
+
+		if icmp.typ == 11 || icmp.typ == 3 {
+			io.onTraceReply(p)
 			continue
 		}
 	}
@@ -61,4 +66,43 @@ func (io *NetIO) onIcmpReply(data []byte) {
 			return
 		}
 	}
+}
+
+func (io *NetIO) onTraceReply(data []byte) {
+	if len(data) < 72 {
+		return
+	}
+
+	hostIP := binary.BigEndian.Uint32(data[12:])
+	srcIP := binary.BigEndian.Uint32(data[16:])
+	destIP := binary.BigEndian.Uint32(data[44:])
+	srcPort := binary.BigEndian.Uint16(data[48:])
+	destPort := binary.BigEndian.Uint16(data[50:])
+	// pid := binary.LittleEndian.Uint32(data[56:])
+	ttl := binary.LittleEndian.Uint32(data[60:])
+	sendStamp := binary.LittleEndian.Uint64(data[64:])
+
+	src := addr.FromInt(srcIP)
+	dest := addr.FromInt(destIP)
+	host := addr.FromInt(hostIP)
+
+	if srcPort != localUDPPort || destPort != remoteUDPPort {
+		return
+	}
+
+	nowStamp := time.Now().UnixNano()
+	delay := (nowStamp - int64(sendStamp)) / 1000
+	if delay < 0 || delay > 10000000 {
+		return
+	}
+
+	resp := &TTLResp{}
+	resp.Src = src
+	resp.Dest = dest
+	resp.Host = host
+	resp.TTL = int(ttl)
+	resp.Delay = int(delay)
+
+	io.handler.OnRecvTTL(resp)
+	// fmt.Println(src.String, dest.String, host.String, pid, ttl, sendStamp, srcPort, destPort, delay)
 }

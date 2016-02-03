@@ -71,7 +71,10 @@ func (results *icmpResultsType) addResult(src *addr.IPAddr, dest *addr.IPAddr, d
 	id := addr.AddrPair(src, dest)
 	results.lock.Lock()
 	defer results.lock.Unlock()
-	r := results.results[id]
+	r, ok := results.results[id]
+	if !ok {
+		return
+	}
 	r = append(r, delay)
 	results.results[id] = r
 }
@@ -115,7 +118,10 @@ func (results *icmpBroadResultsType) addResult(src *addr.IPAddr, dest *addr.IPAd
 	id := addr.AddrSectionPair(src, dest)
 	results.lock.Lock()
 	defer results.lock.Unlock()
-	r := results.results[id]
+	r, ok := results.results[id]
+	if !ok {
+		return
+	}
 	newResult := true
 	for _, v := range r {
 		// fmt.Println(v)
@@ -133,4 +139,77 @@ func (results *icmpBroadResultsType) addResult(src *addr.IPAddr, dest *addr.IPAd
 	}
 
 	results.results[id] = r
+}
+
+type TraceResultType struct {
+	TTL    int
+	Host   *addr.IPAddr
+	Delays []int
+}
+
+type traceResultsType struct {
+	results map[uint64][]*TraceResultType
+	lock    sync.Mutex
+	cond    *sync.Cond
+}
+
+func newTraceResults() *traceResultsType {
+	results := &traceResultsType{}
+	results.cond = sync.NewCond(&results.lock)
+	results.results = make(map[uint64][]*TraceResultType)
+	return results
+}
+
+func (r *traceResultsType) addResult(src *addr.IPAddr, dest *addr.IPAddr, host *addr.IPAddr, ttl int, delay int) {
+	id := addr.AddrPair(src, dest)
+	r.lock.Lock()
+	defer r.lock.Unlock()
+	result, ok := r.results[id]
+	if !ok {
+		return
+	}
+
+	for k, v := range result {
+		if v.TTL == ttl && v.Host.Equal(host) {
+			result[k].Delays = append(result[k].Delays, delay)
+			return
+		}
+	}
+
+	t := &TraceResultType{}
+	t.Host = host
+	t.Delays = make([]int, 1)
+	t.Delays[0] = delay
+	t.TTL = ttl
+	result = append(result, t)
+	r.results[id] = result
+}
+
+func (r *traceResultsType) beginWait(src *addr.IPAddr, dest *addr.IPAddr) {
+	id := addr.AddrPair(src, dest)
+	r.lock.Lock()
+	defer r.lock.Unlock()
+	for {
+		_, ok := r.results[id]
+		if !ok {
+			d := make([]*TraceResultType, 0)
+			r.results[id] = d
+			return
+		}
+		r.cond.Wait()
+	}
+}
+
+func (r *traceResultsType) endWait(src *addr.IPAddr, dest *addr.IPAddr, t int) (ret []*TraceResultType) {
+	id := addr.AddrPair(src, dest)
+	time.Sleep(time.Second * time.Duration(t))
+	r.lock.Lock()
+	defer r.lock.Unlock()
+	d, ok := r.results[id]
+	if ok {
+		ret = d
+		delete(r.results, id)
+	}
+	r.cond.Signal()
+	return
 }

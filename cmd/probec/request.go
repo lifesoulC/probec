@@ -98,3 +98,57 @@ func icmpBroadcast(w http.ResponseWriter, r *http.Request) {
 	b, _ := json.Marshal(resp)
 	w.Write(b)
 }
+
+func udpTrace(w http.ResponseWriter, r *http.Request) {
+	body, _ := ioutil.ReadAll(r.Body)
+	req := &icmpReq{}
+	err := json.Unmarshal(body, req)
+	resp := &traceResp{}
+	if err != nil {
+		resp.ErrMsg = "json error"
+		resp.ErrCode = errJson
+		b, _ := json.Marshal(resp)
+		w.Write(b)
+		return
+	}
+
+	err = checkSrcIP(req.Src)
+	if err != nil {
+		resp.ErrMsg = err.Error()
+		resp.ErrCode = errSrcIP
+		b, _ := json.Marshal(resp)
+		w.Write(b)
+		return
+	}
+
+	opts := &prober.TraceOpts{}
+	opts.Src = req.Src
+	opts.Dest = req.Dest
+	opts.Count = req.Count
+	opts.Interval = req.Interval
+	delays, e := prob.Trace(opts)
+
+	if e != nil {
+		resp.ErrMsg = "probe error:" + e.Error()
+		resp.ErrCode = errUnkown
+	} else {
+
+		for _, v := range delays {
+			if v.Host == nil {
+				continue
+			}
+			d := &hostTraceDelays{}
+			d.Host = v.Host.String
+			d.TTL = v.TTL
+			d.Delays = append(d.Delays, v.Delays...)
+			resp.Delays = append(resp.Delays, d)
+		}
+	}
+
+	resp.Src = req.Src
+	resp.Dest = req.Dest
+	resp.Token = req.Token
+	b, _ := json.Marshal(resp)
+	w.Write(b)
+
+}
