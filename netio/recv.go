@@ -57,7 +57,7 @@ func (io *NetIO) onIcmpReply(data []byte) {
 	resp.Delay = int(delay)
 
 	if io.handler != nil {
-		if reply.seq < icmpSeqMax {
+		if reply.seq <= icmpSeqMax {
 			io.handler.OnRecvPing(resp)
 			return
 		}

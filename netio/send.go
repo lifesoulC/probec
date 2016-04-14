@@ -35,7 +35,7 @@ func (io *NetIO) SendPingBroadcast(src *addr.IPAddr, dest *addr.IPAddr) {
 		opt.dest = raddr
 		opt.broad = true
 		io.icmpChan <- opt
-		time.Sleep(5 * time.Millisecond)
+		time.Sleep(1000 * time.Microsecond)
 	}
 
 }

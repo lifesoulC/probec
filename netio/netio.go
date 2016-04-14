@@ -12,9 +12,9 @@ const (
 	localUDPPort    = 33333
 	remoteUDPPort   = 33486
 	icmpSeqMin      = 1
-	icmpSeqMax      = 99
-	icmpBroadMin    = 100
-	icmpBroadMax    = 199
+	icmpSeqMax      = 5000
+	icmpBroadMin    = 5001
+	icmpBroadMax    = 10000
 )
 
 type PingResp struct {

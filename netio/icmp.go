@@ -43,7 +43,7 @@ func buildIcmpEchoRequest() []byte {
 	icmp.seq = seq + 1
 	icmp.id = uint16(pid)
 	seq += 1
-	if seq > icmpSeqMax {
+	if seq >= icmpSeqMax {
 		seq = icmpSeqMin
 	}
 	return icmp.marshal()
@@ -55,7 +55,7 @@ func buildIcmpBroadcast() []byte {
 	icmp.seq = broadcastSeq + 1
 	icmp.id = uint16(pid)
 	broadcastSeq += 1
-	if broadcastSeq > icmpBroadMax {
+	if broadcastSeq >= icmpBroadMax {
 		broadcastSeq = icmpBroadMin
 	}
 	return icmp.marshal()

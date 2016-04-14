@@ -45,6 +45,7 @@ func icmpPing(w http.ResponseWriter, r *http.Request) {
 	resp.Token = req.Token
 	resp.Src = req.Src
 	resp.Dest = req.Dest
+	resp.Count = len(resp.Delays)
 
 	b, _ := json.Marshal(resp)
 	w.Write(b)
@@ -89,6 +90,7 @@ func icmpBroadcast(w http.ResponseWriter, r *http.Request) {
 			d := &hostDelays{}
 			d.Host = v.Dest.String
 			d.Delays = append(d.Delays, v.Delays...)
+			d.Count = len(d.Delays)
 			resp.Delays = append(resp.Delays, d)
 		}
 	}

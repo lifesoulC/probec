@@ -47,7 +47,7 @@ func (p *Prober) ICMPPing(opts *PingOpts) (delays []int, e error) {
 		time.Sleep(time.Duration(opts.Interval) * time.Millisecond)
 	}
 
-	delays = p.icmpResults.endWait(opts.src, opts.dest, 2)
+	delays = p.icmpResults.endWait(opts.src, opts.dest, 500)
 	return
 }
 
@@ -67,7 +67,7 @@ func (p *Prober) BroadCastPing(opts *IcmpBroadcastOpts) (ret []*DestDelays, e er
 		time.Sleep(time.Duration(opts.Interval) * time.Millisecond)
 	}
 
-	delays := p.icmpBroadResults.endWait(opts.src, opts.dest, 1)
+	delays := p.icmpBroadResults.endWait(opts.src, opts.dest, 500)
 	ret = searchBroadcastDelays(opts.dest, delays)
 	return
 }
@@ -88,7 +88,7 @@ func (p *Prober) Trace(opts *TraceOpts) (delays []*TraceResultType, e error) {
 		p.io.SendTTL(opts.src, opts.dest, 64)
 		time.Sleep(time.Duration(opts.Interval) * time.Millisecond)
 	}
-	delays = p.traceResults.endWait(opts.src, opts.dest, 1)
+	delays = p.traceResults.endWait(opts.src, opts.dest, 500)
 	return
 
 }

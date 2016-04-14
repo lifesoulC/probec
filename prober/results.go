@@ -104,7 +104,7 @@ func (results *icmpBroadResultsType) beginWait(src *addr.IPAddr, dest *addr.IPAd
 }
 
 func (results *icmpBroadResultsType) endWait(src *addr.IPAddr, dest *addr.IPAddr, t int) []*icmpBroadResultType {
-	time.Sleep(time.Duration(t) * time.Second)
+	time.Sleep(time.Duration(t) * time.Millisecond)
 	id := addr.AddrSectionPair(src, dest)
 	results.lock.Lock()
 	r := results.results[id]
@@ -202,7 +202,7 @@ func (r *traceResultsType) beginWait(src *addr.IPAddr, dest *addr.IPAddr) {
 
 func (r *traceResultsType) endWait(src *addr.IPAddr, dest *addr.IPAddr, t int) (ret []*TraceResultType) {
 	id := addr.AddrPair(src, dest)
-	time.Sleep(time.Second * time.Duration(t))
+	time.Sleep(time.Millisecond * time.Duration(t))
 	r.lock.Lock()
 	defer r.lock.Unlock()
 	d, ok := r.results[id]

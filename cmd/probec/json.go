@@ -16,10 +16,12 @@ type icmpResp struct {
 	Src     string `json:"Src"`
 	Dest    string `json:"Dest"`
 	Delays  []int  `json:"Delays"`
+	Count   int    `json:"Count"`
 }
 
 type hostDelays struct {
 	Host   string `json:"Host"`
+	Count  int    `json:"Count"`
 	Delays []int  `json:"Delays"`
 }
 
