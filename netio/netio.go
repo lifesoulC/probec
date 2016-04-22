@@ -4,17 +4,24 @@ import (
 	"errors"
 	"os"
 	"probec/internal/addr"
+	"time"
 )
 
 const (
 	pktTypeICMPEcho = 1
 	pktTypeUDP      = 2
 	localUDPPort    = 33333
-	remoteUDPPort   = 33486
-	icmpSeqMin      = 1
-	icmpSeqMax      = 5000
-	icmpBroadMin    = 5001
-	icmpBroadMax    = 10000
+	remoteUDPPortMin = 33000
+	remoteUDPPortMax = 48000
+	icmpSeqMin       = 1
+	icmpSeqMax       = 5000
+	icmpBroadMin     = 5001
+	icmpBroadMax     = 10000
+)
+
+var (
+	// remoteUDPPort
+	remoteUDPPort uint16 = remoteUDPPortMin
 )
 
 type PingResp struct {
@@ -59,17 +66,21 @@ func init() {
 }
 
 type icmpOpts struct {
-	sock  *icmpSocket
-	broad bool
-	dest  [4]byte
-	data  []byte
+	sock   *icmpSocket
+	broad  bool
+	srcInt uint32
+	dstInt uint32
+	dest   [4]byte
+	data   []byte
 }
 
 type ttlOpts struct {
-	sock *udpSocket
-	dest [4]byte
-	ttl  int
-	data []byte
+	sock   *udpSocket
+	srcInt uint32
+	dstInt uint32
+	dest   [4]byte
+	ttl    int
+	data   []byte
 }
 
 type NetIO struct {
@@ -78,6 +89,8 @@ type NetIO struct {
 	recvSocket *icmpSocket
 	icmpChan   chan *icmpOpts
 	ttlChan    chan *ttlOpts
+	pkts       *pktMap
+	lastClear  time.Time
 	handler    NetIOHandler
 }
 
@@ -100,6 +113,8 @@ func NewNetIO(srcAddrs []string) (*NetIO, error) {
 			io.icmpSocks = append(io.icmpSocks, icmp)
 		}
 	}
+	io.pkts = newPktMap()
+	io.lastClear = time.Now()
 
 	recv, e := newRecvSocket()
 	if e != nil {

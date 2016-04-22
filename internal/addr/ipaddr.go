@@ -30,6 +30,10 @@ func FromString(addr string) (ipAddr *IPAddr, e error) {
 	return
 }
 
+func (addr *IPAddr) Int() uint32 {
+	return addr.addr
+}
+
 func FromInt(ip uint32) (ipAddr *IPAddr) {
 	ipAddr = &IPAddr{}
 	ipAddr.addr = ip

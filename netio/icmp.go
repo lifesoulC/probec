@@ -37,7 +37,7 @@ func (echo *icmpEchoType) marshal() []byte {
 	return p
 }
 
-func buildIcmpEchoRequest() []byte {
+func buildIcmpEchoRequest() ([]byte, uint16) {
 	icmp := icmpEchoType{}
 	icmp.typ = 8
 	icmp.seq = seq + 1
@@ -46,10 +46,10 @@ func buildIcmpEchoRequest() []byte {
 	if seq >= icmpSeqMax {
 		seq = icmpSeqMin
 	}
-	return icmp.marshal()
+	return icmp.marshal(), icmp.seq
 }
 
-func buildIcmpBroadcast() []byte {
+func buildIcmpBroadcast() ([]byte, uint16) {
 	icmp := icmpEchoType{}
 	icmp.typ = 8
 	icmp.seq = broadcastSeq + 1
@@ -58,7 +58,7 @@ func buildIcmpBroadcast() []byte {
 	if broadcastSeq >= icmpBroadMax {
 		broadcastSeq = icmpBroadMin
 	}
-	return icmp.marshal()
+	return icmp.marshal(), icmp.seq
 }
 
 type icmpHeadType struct {
