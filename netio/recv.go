@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"probec/internal/addr"
 	"syscall"
-	"time"
 )
 
 func (io *NetIO) recvRoutine() {
@@ -36,25 +35,26 @@ func (io *NetIO) recvRoutine() {
 }
 
 func (io *NetIO) onIcmpReply(data []byte) {
-	t := time.Now()
 	dest := addr.FromSlice(data[12:])
 	src := addr.FromSlice(data[16:])
 	reply := parseIcmpEchoReply(data[20:])
 	if reply.id != uint16(pid) {
 		return
 	}
+
+	keyOpts := &pktsMapOptsICMP{}
+	keyOpts.dst = dest.Int()
+	keyOpts.src = src.Int()
+	keyOpts.id = uint16(pid)
+	keyOpts.seq = reply.seq
+
+	_, d := io.pkts.getIcmpDelay(keyOpts)
+
 	resp := &PingResp{}
 	resp.Src = src
 	resp.Dest = dest
-	t1 := int64(binary.LittleEndian.Uint64(data[28:]))
-	if t1 < 0 {
-		return
-	}
-	delay := (t.UnixNano() - t1) / 1000
-	if delay < 0 || delay > 100000000 {
-		return
-	}
-	resp.Delay = int(delay)
+
+	resp.Delay = d
 
 	if io.handler != nil {
 		if reply.seq <= icmpSeqMax {
@@ -69,7 +69,7 @@ func (io *NetIO) onIcmpReply(data []byte) {
 }
 
 func (io *NetIO) onTraceReply(data []byte) {
-	if len(data) < 72 {
+	if len(data) < 56 {
 		return
 	}
 
@@ -78,23 +78,18 @@ func (io *NetIO) onTraceReply(data []byte) {
 	destIP := binary.BigEndian.Uint32(data[44:])
 	srcPort := binary.BigEndian.Uint16(data[48:])
 	destPort := binary.BigEndian.Uint16(data[50:])
-	// pid := binary.LittleEndian.Uint32(data[56:])
-	ttl := binary.LittleEndian.Uint32(data[60:])
-	sendStamp := binary.LittleEndian.Uint64(data[64:])
 
 	src := addr.FromInt(srcIP)
 	dest := addr.FromInt(destIP)
 	host := addr.FromInt(hostIP)
 
-	if srcPort != localUDPPort || destPort != remoteUDPPort {
-		return
-	}
+	keyOpts := &pktsMapOptsTTL{}
+	keyOpts.dst = destIP
+	keyOpts.dstPort = destPort
+	keyOpts.src = srcIP
+	keyOpts.srcPort = srcPort
 
-	nowStamp := time.Now().UnixNano()
-	delay := (nowStamp - int64(sendStamp)) / 1000
-	if delay < 0 || delay > 10000000 {
-		return
-	}
+	_, ttl, delay := io.pkts.getTTLDelay(keyOpts)
 
 	resp := &TTLResp{}
 	resp.Src = src

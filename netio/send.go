@@ -1,6 +1,7 @@
 package netio
 
 import (
+	"encoding/binary"
 	"fmt"
 	"probec/internal/addr"
 	"syscall"
@@ -16,6 +17,8 @@ func (io *NetIO) SendPing(src *addr.IPAddr, dest *addr.IPAddr) {
 	opt := &icmpOpts{}
 	opt.dest = dest.Array
 	opt.sock = socket
+	opt.srcInt = src.Int()
+	opt.dstInt = dest.Int()
 	opt.broad = false
 	io.icmpChan <- opt
 }
@@ -32,6 +35,10 @@ func (io *NetIO) SendPingBroadcast(src *addr.IPAddr, dest *addr.IPAddr) {
 		raddr[3] = byte(i)
 		opt := &icmpOpts{}
 		opt.sock = socket
+		tmp := make([]byte, 4)
+		tmp = []byte{raddr[0], raddr[1], raddr[2], raddr[3]}
+		opt.dstInt = binary.BigEndian.Uint32(tmp)
+		opt.srcInt = src.Int()
 		opt.dest = raddr
 		opt.broad = true
 		io.icmpChan <- opt
@@ -51,6 +58,8 @@ func (io *NetIO) SendTTL(src *addr.IPAddr, dest *addr.IPAddr, ttl int) {
 		opts := &ttlOpts{}
 		opts.sock = socket
 		opts.dest = dest.Array
+		opts.srcInt = src.Int()
+		opts.dstInt = dest.Int()
 		opts.ttl = i
 		io.ttlChan <- opts
 		time.Sleep(5 * time.Millisecond)
@@ -58,10 +67,11 @@ func (io *NetIO) SendTTL(src *addr.IPAddr, dest *addr.IPAddr, ttl int) {
 }
 
 func (io *NetIO) sendIcmp(opts *icmpOpts) {
+	var s uint16
 	if opts.broad {
-		opts.data = buildIcmpBroadcast()
+		opts.data, s = buildIcmpBroadcast()
 	} else {
-		opts.data = buildIcmpEchoRequest()
+		opts.data, s = buildIcmpEchoRequest()
 	}
 
 	e := syscall.Sendto(opts.sock.fd, opts.data, 0, &syscall.SockaddrInet4{Port: 0, Addr: opts.dest})
@@ -69,6 +79,12 @@ func (io *NetIO) sendIcmp(opts *icmpOpts) {
 		fmt.Println("send to", opts.dest, e.Error())
 		return
 	}
+	keyOpts := &pktsMapOptsICMP{}
+	keyOpts.dst = opts.dstInt
+	keyOpts.id = uint16(pid)
+	keyOpts.seq = s
+	keyOpts.src = opts.srcInt
+	io.pkts.addIcmpRequest(keyOpts)
 }
 
 func (io *NetIO) sendTTLUDP(opts *ttlOpts) {
@@ -80,11 +96,25 @@ func (io *NetIO) sendTTLUDP(opts *ttlOpts) {
 
 	b := buildUDP(opts.ttl)
 
-	e = syscall.Sendto(opts.sock.fd, b, 0, &syscall.SockaddrInet4{Port: remoteUDPPort, Addr: opts.dest})
+	e = syscall.Sendto(opts.sock.fd, b, 0, &syscall.SockaddrInet4{Port: int(remoteUDPPort), Addr: opts.dest})
+
 	if e != nil {
 		fmt.Println(e)
 		return
 	}
+
+	keyOpts := &pktsMapOptsTTL{}
+	keyOpts.dst = opts.dstInt
+	keyOpts.ttl = opts.ttl
+	keyOpts.dstPort = remoteUDPPort
+	keyOpts.src = opts.srcInt
+	keyOpts.srcPort = localUDPPort
+
+	remoteUDPPort = remoteUDPPort + 1
+	if remoteUDPPort >= remoteUDPPortMax {
+		remoteUDPPort = remoteUDPPortMin
+	}
+	io.pkts.addTTLRequst(keyOpts)
 }
 
 func (io *NetIO) sendRoutine() {
@@ -94,6 +124,11 @@ func (io *NetIO) sendRoutine() {
 			io.sendIcmp(icmpOpts)
 		case ttlOpts := <-io.ttlChan:
 			io.sendTTLUDP(ttlOpts)
+		}
+		t := time.Now()
+		if t.Sub(io.lastClear) > 5*time.Second {
+			io.pkts.clear()
+			io.lastClear = t
 		}
 	}
 }
