@@ -28,7 +28,6 @@ func (io *NetIO) recvRoutine() {
 		}
 
 		if icmp.typ == 11 || icmp.typ == 3 {
-			fmt.Println("trace pkt", len(p))
 			io.onTraceReply(p)
 			continue
 		}
