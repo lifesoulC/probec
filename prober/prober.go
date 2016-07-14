@@ -8,7 +8,7 @@ import (
 )
 
 type Prober struct {
-	src              []string
+	//src              []string
 	io               *netio.NetIO
 	icmpResults      *icmpResultsType
 	icmpBroadResults *icmpBroadResultsType
@@ -17,7 +17,7 @@ type Prober struct {
 
 func NewProber() (p *Prober, e error) {
 	p = &Prober{}
-	p.src = src
+//	p.src = src
 	p.io, e = netio.NewNetIO() //在netio中实现  将netio初始化
 	if e != nil {
 		return

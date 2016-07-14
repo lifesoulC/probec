@@ -21,7 +21,7 @@ func main() {
 	//		//	addr //??
 	//		fmt.Println(s)
 	//	}
-
+  var e error
 	prob, e = prober.NewProber() //初始化Prober结构体 在prober.go中
 
 	if e != nil {
