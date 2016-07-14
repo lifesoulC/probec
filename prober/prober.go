@@ -8,21 +8,21 @@ import (
 )
 
 type Prober struct {
-	//src              []string
+	src              []string
 	io               *netio.NetIO
 	icmpResults      *icmpResultsType
 	icmpBroadResults *icmpBroadResultsType
 	traceResults     *traceResultsType
 }
 
-func NewProber() (p *Prober, e error) {
+func NewProber(src []string) (p *Prober, e error) {
 	p = &Prober{}
-//	p.src = src
+	p.src = src
 	p.io, e = netio.NewNetIO() //在netio中实现  将netio初始化
 	if e != nil {
 		return
 	}
-	p.icmpResults = newIcmpResults() //在results中实现
+	p.icmpResults = newIcmpResults(src) //在results中实现
 	p.icmpBroadResults = newIcmpBroadResults()
 	p.traceResults = newTraceResults()
 	p.io.SetHandler(p)

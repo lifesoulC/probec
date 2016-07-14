@@ -84,8 +84,8 @@ type ttlOpts struct {
 }
 
 type NetIO struct {
-	udpSocks   []*udpSocket
-	icmpSocks  []*icmpSocket
+	//	udpSocks   []*udpSocket
+	//	icmpSocks  []*icmpSocket
 	icmpMap    map[string]*icmpSocket //存放icmp socket
 	udpMap     map[string]*udpSocket  //存放udp  socket
 	recvSocket *icmpSocket
@@ -96,27 +96,27 @@ type NetIO struct {
 	handler    NetIOHandler
 }
 
-func NewNetIO() (*NetIO, error) { //一个IP绑定连个socket 一个UDP 一个ICMP
+func NewNetIO(srcAddrs []string) (*NetIO, error) { //一个IP绑定连个socket 一个UDP 一个ICMP
 	io := &NetIO{}
-	//	for _, addr := range srcAddrs {               //依次绑定本地IP
-	//		udp, e := newUDPSocket(addr)                 //将源地址绑定socket放入udpSocket中
-	//		if e != nil {
-	//			return nil, e
-
-	//		} else {
-	//			io.udpSocks = append(io.udpSocks, udp)    //添加进队列
-	//		}
-
-	//		icmp, e := newIcmpSocket(addr)             //将原地址依次绑定socket放入udpsocket队列中
-	//		if e != nil {
-	//			return nil, e
-
-	//		} else {
-	//			io.icmpSocks = append(io.icmpSocks, icmp)       //添加进队列
-	//		}
-	//	}
 	io.icmpMap = make(map[string]*icmpSocket)
 	io.udpMap = make(map[string]*udpSocket)
+	for _, addr := range srcAddrs { //依次绑定本地IP
+		udp, e := newUDPSocket(addr) //将源地址绑定socket放入udpSocket中
+		if e != nil {
+			return nil, e
+
+		} else {
+			io.udpMap[addr] = udp //添加进map
+		}
+
+		icmp, e := newIcmpSocket(addr) //将原地址依次绑定socket放入udpsocket队列中
+		if e != nil {
+			return nil, e
+
+		} else {
+			io.icmpMap[addr] = icmp //添加进map
+		}
+	}
 
 	io.pkts = newPktMap() //在 stamp.go中定义
 	io.lastClear = time.Now()

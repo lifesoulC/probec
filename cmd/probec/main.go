@@ -11,18 +11,18 @@ var prob *prober.Prober
 
 func main() {
 
-	//	src, e := readIPFile() //从ip.txt中得到源IP
-	//	if e != nil {
-	//		fmt.Println(e)
-	//		return
-	//	}
-	//	srcIP = src
-	//	for _, s := range srcIP { //打印出内容
-	//		//	addr //??
-	//		fmt.Println(s)
-	//	}
-  var e error
-	prob, e = prober.NewProber() //初始化Prober结构体 在prober.go中
+	src, e := readIPFile() //从ip.txt中得到源IP
+	if e != nil {
+		fmt.Println(e)
+		return
+	}
+	srcIP = src
+	for _, s := range srcIP { //打印出内容
+		//	addr //??
+		fmt.Println(s)
+	}
+	// var e error
+	prob, e = prober.NewProber(src) //初始化Prober结构体 在prober.go中
 
 	if e != nil {
 		fmt.Println(e)
