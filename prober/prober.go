@@ -15,39 +15,39 @@ type Prober struct {
 	traceResults     *traceResultsType
 }
 
-func NewProber(src []string) (p *Prober, e error) {
+func NewProber() (p *Prober, e error) {
 	p = &Prober{}
 	p.src = src
-	p.io, e = netio.NewNetIO(src)
+	p.io, e = netio.NewNetIO() //在netio中实现  将netio初始化
 	if e != nil {
 		return
 	}
-	p.icmpResults = newIcmpResults()
+	p.icmpResults = newIcmpResults() //在results中实现
 	p.icmpBroadResults = newIcmpBroadResults()
 	p.traceResults = newTraceResults()
 	p.io.SetHandler(p)
 	return
 }
 
-func (p *Prober) ICMPPing(opts *PingOpts) (delays []int, e error) {
+func (p *Prober) ICMPPing(opts *PingOpts) (delays []int, e error) { //返回延迟
 
-	opts.src, e = addr.FromString(opts.Src)
+	opts.src, e = addr.FromString(opts.Src) // 源ip字符序列转换和 转换IPv4 定义在 ipaddr.go 中
 	if e != nil {
 		return
 	}
-	opts.dest, e = addr.FromString(opts.Dest)
+	opts.dest, e = addr.FromString(opts.Dest) //目的ip字符序列转换 ...
 	if e != nil {
 		return
 	}
 	fmt.Printf("ping %s from %s \n", opts.dest.String, opts.src.String)
-	p.icmpResults.beginWait(opts.src, opts.dest)
+	p.icmpResults.beginWait(opts.src, opts.dest) //将源和目的地址整合到一起 map[uint64][]int 中
 
-	for i := 0; i < opts.Count; i++ {
+	for i := 0; i < opts.Count; i++ { //向通讯管道中发送要测的源和目的ip 发送次数为count次
 		p.io.SendPing(opts.src, opts.dest)
-		time.Sleep(time.Duration(opts.Interval) * time.Millisecond)
+		time.Sleep(time.Duration(opts.Interval) * time.Millisecond) //每次发送延迟为 interval
 	}
 
-	delays = p.icmpResults.endWait(opts.src, opts.dest, 500)
+	delays = p.icmpResults.endWait(opts.src, opts.dest, 500) //在results.go中定义
 	return
 }
 
@@ -88,7 +88,7 @@ func (p *Prober) Trace(opts *TraceOpts) (delays []*TraceResultType, e error) {
 		p.io.SendTTL(opts.src, opts.dest, 64)
 		time.Sleep(time.Duration(opts.Interval) * time.Millisecond)
 	}
-	delays = p.traceResults.endWait(opts.src, opts.dest, 500)
+	delays = p.traceResults.endWait(opts.src, opts.dest, 500) //在results.go中定义
 	return
 
 }

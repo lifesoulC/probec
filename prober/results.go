@@ -39,35 +39,35 @@ func newIcmpResults() *icmpResultsType {
 }
 
 func (results *icmpResultsType) beginWait(src *addr.IPAddr, dest *addr.IPAddr) {
-	id := addr.AddrPair(src, dest)
-	r := make([]int, 0, 64)
-	results.lock.Lock()
+	id := addr.AddrPair(src, dest)      //创造map ID为键 src和dest为值对
+	r := make([]int, 0, 64)             //空切片
+	results.lock.Lock()                 //上锁
 
 	for {
-		_, ok := results.results[id]
+		_, ok := results.results[id]      //查看id是否已经在map中
 		if ok {
-			results.cond.Wait()
+			results.cond.Wait()             //如果是则等待释放
 			continue
 		} else {
 			break
 		}
 	}
-	results.results[id] = r
-	results.lock.Unlock()
+	results.results[id] = r              //清空id
+	results.lock.Unlock()                //解锁
 }
 
 func (results *icmpResultsType) endWait(src *addr.IPAddr, dest *addr.IPAddr, t int) []int {
 	time.Sleep(time.Duration(t) * time.Millisecond)
 	id := addr.AddrPair(src, dest)
-	results.lock.Lock()
+	results.lock.Lock()                      //加锁
 	r := results.results[id]
-	delete(results.results, id)
-	results.lock.Unlock()
-	results.cond.Signal()
+	delete(results.results, id)               //从map中删除
+	results.lock.Unlock()                   //解锁
+	results.cond.Signal()                   //发送信号   beginWait接收信号
 	return r
 }
 
-func (results *icmpResultsType) addResult(src *addr.IPAddr, dest *addr.IPAddr, delay int) {
+func (results *icmpResultsType) addResult(src *addr.IPAddr, dest *addr.IPAddr, delay int) {  //将接收到的结果加入map
 	id := addr.AddrPair(src, dest)
 	results.lock.Lock()
 	defer results.lock.Unlock()

@@ -8,9 +8,9 @@ import (
 )
 
 const (
-	pktTypeICMPEcho = 1
-	pktTypeUDP      = 2
-	localUDPPort    = 33333
+	pktTypeICMPEcho  = 1
+	pktTypeUDP       = 2
+	localUDPPort     = 33333
 	remoteUDPPortMin = 33000
 	remoteUDPPortMax = 48000
 	icmpSeqMin       = 1
@@ -86,6 +86,8 @@ type ttlOpts struct {
 type NetIO struct {
 	udpSocks   []*udpSocket
 	icmpSocks  []*icmpSocket
+	icmpMap    map[string]*icmpSocket //存放icmp socket
+	udpMap     map[string]*udpSocket  //存放udp  socket
 	recvSocket *icmpSocket
 	icmpChan   chan *icmpOpts
 	ttlChan    chan *ttlOpts
@@ -94,29 +96,32 @@ type NetIO struct {
 	handler    NetIOHandler
 }
 
-func NewNetIO(srcAddrs []string) (*NetIO, error) {
+func NewNetIO() (*NetIO, error) { //一个IP绑定连个socket 一个UDP 一个ICMP
 	io := &NetIO{}
-	for _, addr := range srcAddrs {
-		udp, e := newUDPSocket(addr)
-		if e != nil {
-			return nil, e
+	//	for _, addr := range srcAddrs {               //依次绑定本地IP
+	//		udp, e := newUDPSocket(addr)                 //将源地址绑定socket放入udpSocket中
+	//		if e != nil {
+	//			return nil, e
 
-		} else {
-			io.udpSocks = append(io.udpSocks, udp)
-		}
+	//		} else {
+	//			io.udpSocks = append(io.udpSocks, udp)    //添加进队列
+	//		}
 
-		icmp, e := newIcmpSocket(addr)
-		if e != nil {
-			return nil, e
+	//		icmp, e := newIcmpSocket(addr)             //将原地址依次绑定socket放入udpsocket队列中
+	//		if e != nil {
+	//			return nil, e
 
-		} else {
-			io.icmpSocks = append(io.icmpSocks, icmp)
-		}
-	}
-	io.pkts = newPktMap()
+	//		} else {
+	//			io.icmpSocks = append(io.icmpSocks, icmp)       //添加进队列
+	//		}
+	//	}
+	io.icmpMap = make(map[string]*icmpSocket)
+	io.udpMap = make(map[string]*udpSocket)
+
+	io.pkts = newPktMap() //在 stamp.go中定义
 	io.lastClear = time.Now()
 
-	recv, e := newRecvSocket()
+	recv, e := newRecvSocket() //创建接收socket icmp接口
 	if e != nil {
 		return nil, e
 	}
@@ -134,20 +139,48 @@ func NewNetIO(srcAddrs []string) (*NetIO, error) {
 func (io *NetIO) SetHandler(h NetIOHandler) {
 	io.handler = h
 }
+
 func (io *NetIO) getIcmpSock(addr string) *icmpSocket {
-	for _, s := range io.icmpSocks {
-		if s.laddr == addr {
-			return s
+
+	if v, ok := io.icmpMap[addr]; ok {
+		return v
+	} else {
+		icmp, e := newIcmpSocket(addr) //将原地址依次绑定socket放入udpsocket队列中
+		if e != nil {
+			return e
+
+		} else {
+			io.icmpMap[addr] = icmp //添加Map
+			return icmp
 		}
 	}
-	return nil
+
+	//	for _, s := range io.icmpSocks {
+	//		if s.laddr == addr {
+	//			return s
+	//		}
+	//	}
+	//	return nil
 }
 
 func (io *NetIO) getUdpSock(addr string) *udpSocket {
-	for _, s := range io.udpSocks {
-		if s.laddr == addr {
-			return s
+
+	if v, ok := io.icmpMap[addr]; ok {
+		return v
+	} else {
+		icmp, e := newIcmpSocket(addr) //将原地址依次绑定socket放入udpsocket队列中
+		if e != nil {
+			return e
+
+		} else {
+			io.icmpMap[addr] = icmp //添加Map
+			return icmp
 		}
 	}
-	return nil
+	//	for _, s := range io.udpSocks {
+	//		if s.laddr == addr {
+	//			return s
+	//		}
+	//	}
+	//	return nil
 }

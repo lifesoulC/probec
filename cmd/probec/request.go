@@ -8,28 +8,28 @@ import (
 )
 
 func icmpPing(w http.ResponseWriter, r *http.Request) {
-	body, _ := ioutil.ReadAll(r.Body)
-	req := &icmpReq{}
-	err := json.Unmarshal(body, req)
-	resp := &icmpResp{}
+	body, _ := ioutil.ReadAll(r.Body) //将http中的body读出来
+	req := &icmpReq{}                 //初始化icmpreq结构体
+	err := json.Unmarshal(body, req)  //解析json文件 body放入结构体 icmpReq 中
+	resp := &icmpResp{}               //初始化icmpresp结构体
 	if err != nil {
-		resp.ErrMsg = "json error"
+		resp.ErrMsg = "json error" //如果错误 返回错误信息
 		resp.ErrCode = errJson
 		b, _ := json.Marshal(resp)
 		w.Write(b)
 		return
 	}
 
-	err = checkSrcIP(req.Src)
-	if err != nil {
-		resp.ErrMsg = err.Error()
-		resp.ErrCode = errSrcIP
-		b, _ := json.Marshal(resp)
-		w.Write(b)
-		return
-	}
+//	err = checkSrcIP(req.Src) //检查ip的合法性
+//	if err != nil {
+//		resp.ErrMsg = err.Error()
+//		resp.ErrCode = errSrcIP
+//		b, _ := json.Marshal(resp)
+//		w.Write(b)
+//		return
+//	}
 
-	opts := &prober.PingOpts{}
+	opts := &prober.PingOpts{} //将opts初始化
 	opts.Count = req.Count
 	opts.Src = req.Src
 	opts.Dest = req.Dest
@@ -64,14 +64,14 @@ func icmpBroadcast(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err = checkSrcIP(req.Src)
-	if err != nil {
-		resp.ErrMsg = err.Error()
-		resp.ErrCode = errSrcIP
-		b, _ := json.Marshal(resp)
-		w.Write(b)
-		return
-	}
+//	err = checkSrcIP(req.Src)
+//	if err != nil {
+//		resp.ErrMsg = err.Error()
+//		resp.ErrCode = errSrcIP
+//		b, _ := json.Marshal(resp)
+//		w.Write(b)
+//		return
+//	}
 
 	opts := &prober.IcmpBroadcastOpts{}
 	opts.Src = req.Src
@@ -114,14 +114,14 @@ func udpTrace(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err = checkSrcIP(req.Src)
-	if err != nil {
-		resp.ErrMsg = err.Error()
-		resp.ErrCode = errSrcIP
-		b, _ := json.Marshal(resp)
-		w.Write(b)
-		return
-	}
+//	err = checkSrcIP(req.Src)
+//	if err != nil {
+//		resp.ErrMsg = err.Error()
+//		resp.ErrCode = errSrcIP
+//		b, _ := json.Marshal(resp)
+//		w.Write(b)
+//		return
+//	}
 
 	opts := &prober.TraceOpts{}
 	opts.Src = req.Src

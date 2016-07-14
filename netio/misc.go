@@ -14,10 +14,10 @@ func ipArrary(ip []byte) [4]byte {
 	return [4]byte{ip[0], ip[1], ip[2], ip[3]}
 }
 
-func addrIpArray(addr string) (ip [4]byte, err error) {
+func addrIpArray(addr string) (ip [4]byte, err error) {   //获取标准IPv4格式 放入ip数组  used in   newUDPSocket（）
 	ip = [4]byte{0, 0, 0, 0}
 
-	a, err := net.ResolveIPAddr("ip", addr)
+	a, err := net.ResolveIPAddr("ip", addr)   //将字符串addr转化为ip格式
 	if err != nil {
 		return ip, err
 	}

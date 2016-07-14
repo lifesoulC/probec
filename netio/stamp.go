@@ -35,13 +35,13 @@ type pktsMapOptsTTL struct {
 }
 
 type pktMap struct {
-	lock sync.Mutex
-	pkts map[pktKey]pktValue
+	lock sync.Mutex                 //锁
+	pkts map[pktKey]pktValue        //map键值对    值存放ttl和 sendstamp time.Time
 }
 
 func newPktMap() *pktMap {
 	ret := &pktMap{}
-	ret.pkts = make(map[pktKey]pktValue)
+	ret.pkts = make(map[pktKey]pktValue)      //初始化map
 	return ret
 }
 
