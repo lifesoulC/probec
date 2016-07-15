@@ -18,11 +18,11 @@ type Prober struct {
 func NewProber(src []string) (p *Prober, e error) {
 	p = &Prober{}
 	p.src = src
-	p.io, e = netio.NewNetIO() //在netio中实现  将netio初始化
+	p.io, e = netio.NewNetIO(src) //在netio中实现  将netio初始化
 	if e != nil {
 		return
 	}
-	p.icmpResults = newIcmpResults(src) //在results中实现
+	p.icmpResults = newIcmpResults() //在results中实现
 	p.icmpBroadResults = newIcmpBroadResults()
 	p.traceResults = newTraceResults()
 	p.io.SetHandler(p)

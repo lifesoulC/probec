@@ -145,10 +145,9 @@ func (io *NetIO) getIcmpSock(addr string) *icmpSocket {
 	if v, ok := io.icmpMap[addr]; ok {
 		return v
 	} else {
-		icmp, e := newIcmpSocket(addr) //将原地址依次绑定socket放入udpsocket队列中
+		icmp, e := newIcmpSocket(addr) //将原地址依次绑定socket放入udpsocket map
 		if e != nil {
 			return nil
-
 		} else {
 			io.icmpMap[addr] = icmp //添加Map
 			return icmp
