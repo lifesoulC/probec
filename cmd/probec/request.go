@@ -20,14 +20,14 @@ func icmpPing(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	//	err = checkSrcIP(req.Src) //检查ip的合法性
-	//	if err != nil {
-	//		resp.ErrMsg = err.Error()
-	//		resp.ErrCode = errSrcIP
-	//		b, _ := json.Marshal(resp)
-	//		w.Write(b)
-	//		return
-	//	}
+	err = checkSrcIP(req.Src) //检查ip的合法性
+	if err != nil {
+		resp.ErrMsg = err.Error()
+		resp.ErrCode = errSrcIP
+		b, _ := json.Marshal(resp)
+		w.Write(b)
+		return
+	}
 
 	opts := &prober.PingOpts{} //将opts初始化
 	opts.Count = req.Count
@@ -65,14 +65,14 @@ func icmpBroadcast(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	//	err = checkSrcIP(req.Src)
-	//	if err != nil {
-	//		resp.ErrMsg = err.Error()
-	//		resp.ErrCode = errSrcIP
-	//		b, _ := json.Marshal(resp)
-	//		w.Write(b)
-	//		return
-	//	}
+	err = checkSrcIP(req.Src)
+	if err != nil {
+		resp.ErrMsg = err.Error()
+		resp.ErrCode = errSrcIP
+		b, _ := json.Marshal(resp)
+		w.Write(b)
+		return
+	}
 
 	opts := &prober.IcmpBroadcastOpts{}
 	opts.Src = req.Src
@@ -115,14 +115,14 @@ func udpTrace(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	//	err = checkSrcIP(req.Src)
-	//	if err != nil {
-	//		resp.ErrMsg = err.Error()
-	//		resp.ErrCode = errSrcIP
-	//		b, _ := json.Marshal(resp)
-	//		w.Write(b)
-	//		return
-	//	}
+	err = checkSrcIP(req.Src)
+	if err != nil {
+		resp.ErrMsg = err.Error()
+		resp.ErrCode = errSrcIP
+		b, _ := json.Marshal(resp)
+		w.Write(b)
+		return
+	}
 
 	opts := &prober.TraceOpts{}
 	opts.Src = req.Src

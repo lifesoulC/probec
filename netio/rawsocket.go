@@ -35,7 +35,10 @@ func newUDPSocket(laddr string) (*udpSocket, error) { //创建udp套接字
 	if err != nil {
 		return nil, errors.New(laddr + " bind udp socket:" + err.Error())
 	}
-
+	err = syscall.SetsockoptInt(s.fd, syscall.SOL_SOCKET, syscall.SO_REUSEADDR,0) //setbuf
+	if err != nil {
+		return nil, errors.New(laddr + " set udp socket send buff:" + err.Error())
+	}
 	err = syscall.SetsockoptInt(s.fd, syscall.SOL_SOCKET, syscall.SO_SNDBUF, 1024*1024) //setbuf
 	if err != nil {
 		return nil, errors.New(laddr + " set udp socket send buff:" + err.Error())
