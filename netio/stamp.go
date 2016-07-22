@@ -117,7 +117,7 @@ func (pkts *pktMap) getTTLDelay(opts *pktsMapOptsTTL) (b bool, ttl int, delay in
 	k := genTTLKey(opts)
 	t := time.Now()
 	pkts.lock.Lock()
-	pkts.lock.Unlock()
+	defer pkts.lock.Unlock()
 	v, ok := pkts.pkts[k]
 	if !ok {
 		return false, 0, 0

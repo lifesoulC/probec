@@ -8,10 +8,11 @@ import (
 	"time"
 )
 
-func (io *NetIO) SendPing(src *addr.IPAddr, dest *addr.IPAddr) {
-	socket := io.getIcmpSock(src.String)           //获得已经绑定好的socket
+func (io *NetIO) SendPing(src *addr.IPAddr, dest *addr.IPAddr) (err error) {
+	socket, e := io.getIcmpSock(src.String) //获得已经绑定好的socket
 	if socket == nil {
 		fmt.Println(src.String, "not a local ip")
+		err = e
 		return
 	}
 	opt := &icmpOpts{}
@@ -20,13 +21,14 @@ func (io *NetIO) SendPing(src *addr.IPAddr, dest *addr.IPAddr) {
 	opt.srcInt = src.Int()
 	opt.dstInt = dest.Int()
 	opt.broad = false
-	io.icmpChan <- opt     //送到管道
+	io.icmpChan <- opt //送到管道
 }
 
-func (io *NetIO) SendPingBroadcast(src *addr.IPAddr, dest *addr.IPAddr) {
-	socket := io.getIcmpSock(src.String)
+func (io *NetIO) SendPingBroadcast(src *addr.IPAddr, dest *addr.IPAddr) (err error) {
+	socket, e := io.getIcmpSock(src.String)
 	if socket == nil {
 		fmt.Println(src.String, "not a local ip")
+		err = e
 		return
 	}
 
@@ -47,10 +49,11 @@ func (io *NetIO) SendPingBroadcast(src *addr.IPAddr, dest *addr.IPAddr) {
 
 }
 
-func (io *NetIO) SendTTL(src *addr.IPAddr, dest *addr.IPAddr, ttl int) {
-	socket := io.getUdpSock(src.String)
+func (io *NetIO) SendTTL(src *addr.IPAddr, dest *addr.IPAddr, ttl int) (err error) {
+	socket, e := io.getUdpSock(src.String)
 	if socket == nil {
 		fmt.Println(src.String, "not a local ip")
+		err = e
 		return
 	}
 
@@ -66,7 +69,7 @@ func (io *NetIO) SendTTL(src *addr.IPAddr, dest *addr.IPAddr, ttl int) {
 	}
 }
 
-func (io *NetIO) sendIcmp(opts *icmpOpts) {     //发送icmp包
+func (io *NetIO) sendIcmp(opts *icmpOpts) { //发送icmp包
 	var s uint16
 	if opts.broad {
 		opts.data, s = buildIcmpBroadcast()
@@ -74,7 +77,7 @@ func (io *NetIO) sendIcmp(opts *icmpOpts) {     //发送icmp包
 		opts.data, s = buildIcmpEchoRequest()
 	}
 
-	e := syscall.Sendto(opts.sock.fd, opts.data, 0, &syscall.SockaddrInet4{Port: 0, Addr: opts.dest})   //从零号端口发出
+	e := syscall.Sendto(opts.sock.fd, opts.data, 0, &syscall.SockaddrInet4{Port: 0, Addr: opts.dest}) //从零号端口发出
 	if e != nil {
 		fmt.Println("send to", opts.dest, e.Error())
 		return
@@ -120,7 +123,7 @@ func (io *NetIO) sendTTLUDP(opts *ttlOpts) {
 func (io *NetIO) sendRoutine() {
 	for {
 		select {
-		case icmpOpts := <-io.icmpChan:     //从icmpchan队列中读出一个放入icmp发送出去
+		case icmpOpts := <-io.icmpChan: //从icmpchan队列中读出一个放入icmp发送出去
 			io.sendIcmp(icmpOpts)
 		case ttlOpts := <-io.ttlChan:
 			io.sendTTLUDP(ttlOpts)

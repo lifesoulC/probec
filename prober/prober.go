@@ -43,7 +43,10 @@ func (p *Prober) ICMPPing(opts *PingOpts) (delays []int, e error) { //返回延�
 	p.icmpResults.beginWait(opts.src, opts.dest) //将源和目的地址整合到一起 map[uint64][]int 中
 
 	for i := 0; i < opts.Count; i++ { //向通讯管道中发送要测的源和目的ip 发送次数为count次
-		p.io.SendPing(opts.src, opts.dest)
+		er := p.io.SendPing(opts.src, opts.dest)
+		if er != nil {
+			break
+		}
 		time.Sleep(time.Duration(opts.Interval) * time.Millisecond) //每次发送延迟为 interval
 	}
 
@@ -63,7 +66,10 @@ func (p *Prober) BroadCastPing(opts *IcmpBroadcastOpts) (ret []*DestDelays, e er
 	fmt.Printf("broadcast %s from %s \n", opts.dest.String, opts.src.String)
 	p.icmpBroadResults.beginWait(opts.src, opts.dest)
 	for i := 0; i < opts.Count; i++ {
-		p.io.SendPingBroadcast(opts.src, opts.dest)
+		er := p.io.SendPingBroadcast(opts.src, opts.dest)
+		if er != nil {
+			break
+		}
 		time.Sleep(time.Duration(opts.Interval) * time.Millisecond)
 	}
 
@@ -85,7 +91,10 @@ func (p *Prober) Trace(opts *TraceOpts) (delays []*TraceResultType, e error) {
 
 	p.traceResults.beginWait(opts.src, opts.dest)
 	for i := 0; i < opts.Count; i++ {
-		p.io.SendTTL(opts.src, opts.dest, 64)
+		er := p.io.SendTTL(opts.src, opts.dest, 64)
+		if er != nil {
+			break
+		}
 		time.Sleep(time.Duration(opts.Interval) * time.Millisecond)
 	}
 	delays = p.traceResults.endWait(opts.src, opts.dest, 500) //在results.go中定义

@@ -103,7 +103,8 @@ func NewNetIO(srcAddrs []string) (*NetIO, error) { //一个IP绑定连个socket 
 	for _, addr := range srcAddrs { //依次绑定本地IP
 		udp, e := newUDPSocket(addr) //将源地址绑定socket放入udpSocket中
 		if e != nil {
-			return nil, e
+			fmt.Println("bind Udpsocket error")
+			fmt.Println(e)
 
 		} else {
 			io.udpMap[addr] = udp //添加进map
@@ -111,7 +112,8 @@ func NewNetIO(srcAddrs []string) (*NetIO, error) { //一个IP绑定连个socket 
 
 		icmp, e := newIcmpSocket(addr) //将原地址依次绑定socket放入udpsocket队列中
 		if e != nil {
-			return nil, e
+			fmt.Println("bind Icmpsocket error")
+			fmt.Println(e)
 
 		} else {
 			io.icmpMap[addr] = icmp //添加进map
@@ -140,17 +142,18 @@ func (io *NetIO) SetHandler(h NetIOHandler) {
 	io.handler = h
 }
 
-func (io *NetIO) getIcmpSock(addr string) *icmpSocket {
+func (io *NetIO) getIcmpSock(addr string) (*icmpSocket , error){
 
 	if v, ok := io.icmpMap[addr]; ok {
-		return v
+		return v, nil
 	} else {
 		icmp, e := newIcmpSocket(addr) //将原地址依次绑定socket放入udpsocket map
 		if e != nil {
-			return nil
+			fmt.Println(e)
+			return nil, e
 		} else {
 			io.icmpMap[addr] = icmp //添加Map
-			return icmp
+			return icmp, nil
 		}
 	}
 
@@ -162,18 +165,19 @@ func (io *NetIO) getIcmpSock(addr string) *icmpSocket {
 	//	return nil
 }
 
-func (io *NetIO) getUdpSock(addr string) *udpSocket {
+func (io *NetIO) getUdpSock(addr string) (*udpSocket, error) {
 
 	if v, ok := io.udpMap[addr]; ok {
-		return v
+		return v, nil
 	} else {
 		udp, e := newUDPSocket(addr) //将原地址依次绑定socket放入udpsocket队列中
 		if e != nil {
-			return nil
+			fmt.Println(e)
+			return nil, e
 
 		} else {
 			io.udpMap[addr] = udp //添加Map
-			return udp
+			return udp, nil
 		}
 	}
 	//	for _, s := range io.udpSocks {

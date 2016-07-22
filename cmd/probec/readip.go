@@ -33,7 +33,7 @@ func readIPFile() (src []string, err error) { //从ip.txt中读取信息
 	for i, address := range addrs {
 
 		// 检查ip地址判断是否回环地址
-		if ipnet, ok := address.(*net.IPNet); ok && !ipnet.IP.IsLoopback() {
+		if ipnet, ok := address.(*net.IPNet); ok {
 			if ipnet.IP.To4() != nil {
 				chack[ipnet.IP.String()] = i
 			}

@@ -15,7 +15,7 @@ type IPAddr struct {
 }
 
 func FromString(addr string) (ipAddr *IPAddr, e error) {
-	a, e := net.ResolveIPAddr("ip4", addr)
+	a, e := net.ResolveIPAddr("ip4", addr)  //将addr地址解析成IPv4
 	if e != nil {
 		return nil, e
 	}
@@ -38,7 +38,7 @@ func FromInt(ip uint32) (ipAddr *IPAddr) {
 	ipAddr = &IPAddr{}
 	ipAddr.addr = ip
 	ipAddr.Slice = make([]byte, 4)
-	binary.BigEndian.PutUint32(ipAddr.Slice, ip)
+	binary.BigEndian.PutUint32(ipAddr.Slice, ip)  //大端转换数列
 	ipAddr.Array[0], ipAddr.Array[1], ipAddr.Array[2], ipAddr.Array[3] = ipAddr.Slice[0], ipAddr.Slice[1], ipAddr.Slice[2], ipAddr.Slice[3]
 	ipAddr.String = fmt.Sprintf("%d.%d.%d.%d", ipAddr.Array[0], ipAddr.Array[1], ipAddr.Array[2], ipAddr.Array[3])
 	ipAddr.Domain = ipAddr.String
@@ -56,7 +56,7 @@ func FromSlice(addr []byte) (ipAddr *IPAddr) {
 	return ipAddr
 }
 
-func AddrPair(addr1 *IPAddr, addr2 *IPAddr) uint64 {
+func AddrPair(addr1 *IPAddr, addr2 *IPAddr) uint64 {   //将源和目的整合到一个 uint64中 used in ICMPPing()
 	return (uint64(addr1.addr) << 32) | uint64(addr2.addr)
 }
 
