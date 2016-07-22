@@ -129,8 +129,8 @@ func NewNetIO(srcAddrs []string) (*NetIO, error) { //一个IP绑定连个socket 
 	}
 	io.recvSocket = recv
 
-	io.icmpChan = make(chan *icmpOpts, 1024)
-	io.ttlChan = make(chan *ttlOpts, 1024)
+	io.icmpChan = make(chan *icmpOpts, 1024*2)
+	io.ttlChan = make(chan *ttlOpts, 1024*2)
 
 	go io.sendRoutine()
 	go io.recvRoutine()
@@ -142,7 +142,7 @@ func (io *NetIO) SetHandler(h NetIOHandler) {
 	io.handler = h
 }
 
-func (io *NetIO) getIcmpSock(addr string) (*icmpSocket , error){
+func (io *NetIO) getIcmpSock(addr string) (*icmpSocket, error) {
 
 	if v, ok := io.icmpMap[addr]; ok {
 		return v, nil
